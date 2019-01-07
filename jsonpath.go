@@ -15,7 +15,7 @@ import (
 	"github.com/steinfletcher/api-test"
 )
 
-// JSONPathContains is a convenience function to assert that a jsonpath expression extracts a value in an array
+// Contains is a convenience function to assert that a jsonpath expression extracts a value in an array
 func Contains(expression string, expected interface{}) apitest.Assert {
 	return func(res *http.Response, req *http.Request) error {
 		value, err := jsonPath(res.Body, expression)
@@ -34,7 +34,7 @@ func Contains(expression string, expected interface{}) apitest.Assert {
 	}
 }
 
-// JSONPathEqual is a convenience function to assert that a jsonpath expression extracts a value
+// Equal is a convenience function to assert that a jsonpath expression extracts a value
 func Equal(expression string, expected interface{}) apitest.Assert {
 	return func(res *http.Response, req *http.Request) error {
 		value, err := jsonPath(res.Body, expression)
@@ -42,7 +42,7 @@ func Equal(expression string, expected interface{}) apitest.Assert {
 			return err
 		}
 
-		if !ObjectsAreEqual(value, expected) {
+		if !objectsAreEqual(value, expected) {
 			return errors.New(fmt.Sprintf("\"%s\" not equal to \"%s\"", value, expected))
 		}
 		return nil
@@ -86,7 +86,7 @@ func includesElement(list interface{}, element interface{}) (ok, found bool) {
 	if reflect.TypeOf(list).Kind() == reflect.Map {
 		mapKeys := listValue.MapKeys()
 		for i := 0; i < len(mapKeys); i++ {
-			if ObjectsAreEqual(mapKeys[i].Interface(), element) {
+			if objectsAreEqual(mapKeys[i].Interface(), element) {
 				return true, true
 			}
 		}
@@ -94,14 +94,14 @@ func includesElement(list interface{}, element interface{}) (ok, found bool) {
 	}
 
 	for i := 0; i < listValue.Len(); i++ {
-		if ObjectsAreEqual(listValue.Index(i).Interface(), element) {
+		if objectsAreEqual(listValue.Index(i).Interface(), element) {
 			return true, true
 		}
 	}
 	return true, false
 }
 
-func ObjectsAreEqual(expected, actual interface{}) bool {
+func objectsAreEqual(expected, actual interface{}) bool {
 	if expected == nil || actual == nil {
 		return expected == actual
 	}
