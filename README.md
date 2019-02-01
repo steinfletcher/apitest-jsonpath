@@ -1,11 +1,11 @@
 # api-test-jsonpath
 
-This library provides jsonpath assertions for [api-test](https://github.com/steinfletcher/api-test).
+This library provides jsonpath assertions for [apitest](https://github.com/steinfletcher/apitest).
 
 # Installation
 
 ```bash
-go get -u github.com/steinfletcher/api-test-jsonpath
+go get -u github.com/steinfletcher/apitest-jsonpath
 ```
 
 ## Examples
