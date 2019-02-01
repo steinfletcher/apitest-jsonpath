@@ -1,4 +1,4 @@
-module github.com/steinfletcher/api-test-jsonpath
+module github.com/steinfletcher/apitest-jsonpath
 
 require (
 	github.com/PaesslerAG/gval v0.1.1 // indirect
