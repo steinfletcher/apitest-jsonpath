@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/PaesslerAG/jsonpath"
-	"github.com/steinfletcher/api-test"
+	"github.com/steinfletcher/apitest"
 )
 
 // Contains is a convenience function to assert that a jsonpath expression extracts a value in an array

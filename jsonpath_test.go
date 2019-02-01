@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/steinfletcher/api-test"
+	"github.com/steinfletcher/apitest"
 )
 
 func TestApiTest_Contains(t *testing.T) {
