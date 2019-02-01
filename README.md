@@ -1,4 +1,4 @@
-# api-test-jsonpath
+# apitest-jsonpath
 
 This library provides jsonpath assertions for [apitest](https://github.com/steinfletcher/apitest).
 
