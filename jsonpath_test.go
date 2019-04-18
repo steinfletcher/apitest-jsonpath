@@ -133,6 +133,26 @@ func Test_IncludesElement(t *testing.T) {
 	assertFalse(t, found)
 }
 
+func TestApiTest_Len(t *testing.T) {
+	handler := http.NewServeMux()
+	handler.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+		_, err := w.Write([]byte(`{"a": [1, 2, 3], "b": "c"}`))
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	apitest.New().
+		Handler(handler).
+		Get("/hello").
+		Expect(t).
+		Assert(Len(`$.a`, 3)).
+		Assert(Len(`$.b`, 1)).
+		End()
+}
+
 func assertTrue(t *testing.T, v bool) {
 	if !v {
 		t.Error("\nexpected to be true but was false")

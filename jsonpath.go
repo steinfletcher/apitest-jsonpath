@@ -49,6 +49,21 @@ func Equal(expression string, expected interface{}) apitest.Assert {
 	}
 }
 
+func Len(expression string, expectedLength int) apitest.Assert {
+	return func(res *http.Response, req *http.Request) error {
+		value, err := jsonPath(res.Body, expression)
+		if err != nil {
+			return err
+		}
+
+		v := reflect.ValueOf(value)
+		if v.Len() != expectedLength {
+			return errors.New(fmt.Sprintf("\"%d\" not equal to \"%d\"", v.Len(), expectedLength))
+		}
+		return nil
+	}
+}
+
 func jsonPath(reader io.Reader, expression string) (interface{}, error) {
 	v := interface{}(nil)
 	b, err := ioutil.ReadAll(reader)
