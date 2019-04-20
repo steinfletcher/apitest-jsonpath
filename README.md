@@ -22,19 +22,6 @@ go get -u github.com/steinfletcher/apitest-jsonpath
 		End()
 ```
 
-### Contains
-
-When the jsonpath expression returns an array, use `jsonpath.Contains` to assert the expected value is contained in the result. Given the response is `{"a": 12345, "b": [{"key": "c", "value": "result"}]}`, we can assert on the result like so
-
-```go
-	apitest.New().
-		Handler(handler).
-		Get("/hello").
-		Expect(t).
-		Assert(jsonpath.Contains(`$.b[? @.key=="c"].value`, "result")).
-		End()
-```
-
 we can also provide more complex expected values
 
 ```go
@@ -47,6 +34,19 @@ we can also provide more complex expected values
 ```
 
 given the response is `{"a": "hello", "b": 12345}` 
+
+### Contains
+
+When the jsonpath expression returns an array, use `jsonpath.Contains` to assert the expected value is contained in the result. Given the response is `{"a": 12345, "b": [{"key": "c", "value": "result"}]}`, we can assert on the result like so
+
+```go
+	apitest.New().
+		Handler(handler).
+		Get("/hello").
+		Expect(t).
+		Assert(jsonpath.Contains(`$.b[? @.key=="c"].value`, "result")).
+		End()
+```
 
 ### Len
 
