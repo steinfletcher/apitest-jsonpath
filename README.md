@@ -10,6 +10,8 @@ go get -u github.com/steinfletcher/apitest-jsonpath
 
 ## Examples
 
+### Equals
+
 `Equals` checks for value equality when the json path expression returns a single result. Given the response is `{"a": 12345}`, the result can be asserted as follows
 
 ```go
@@ -19,6 +21,8 @@ go get -u github.com/steinfletcher/apitest-jsonpath
 		Assert(jsonpath.Equal(`$.a`, float64(12345))).
 		End()
 ```
+
+### Contains
 
 When the jsonpath expression returns an array, use `jsonpath.Contains` to assert the expected value is contained in the result. Given the response is `{"a": 12345, "b": [{"key": "c", "value": "result"}]}`, we can assert on the result like so
 
@@ -43,3 +47,16 @@ we can also provide more complex expected values
 ```
 
 given the response is `{"a": "hello", "b": 12345}` 
+
+### Len
+
+Use `Len` to check to the length of the returned value.
+
+```go
+	apitest.New().
+		Handler(handler).
+		Get("/articles?category=golang").
+		Expect(t).
+		Assert(jsonpath.Len(`$.items`, 3).
+		End()
+```
