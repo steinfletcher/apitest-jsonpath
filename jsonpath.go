@@ -64,6 +64,49 @@ func Len(expression string, expectedLength int) apitest.Assert {
 	}
 }
 
+func Present(expression string) apitest.Assert {
+	return func(res *http.Response, req *http.Request) error {
+		value, _ := jsonPath(res.Body, expression)
+		if isEmpty(value) {
+			return errors.New(fmt.Sprintf("value not present for expression: '%s'", expression))
+		}
+		return nil
+	}
+}
+
+func NotPresent(expression string) apitest.Assert {
+	return func(res *http.Response, req *http.Request) error {
+		value, _ := jsonPath(res.Body, expression)
+		if !isEmpty(value) {
+			return errors.New(fmt.Sprintf("value present for expression: '%s'", expression))
+		}
+		return nil
+	}
+}
+
+func isEmpty(object interface{}) bool {
+	if object == nil {
+		return true
+	}
+
+	objValue := reflect.ValueOf(object)
+
+	switch objValue.Kind() {
+	case reflect.Array, reflect.Chan, reflect.Map, reflect.Slice:
+		return objValue.Len() == 0
+	case reflect.Ptr:
+		if objValue.IsNil() {
+			return true
+		}
+		deref := objValue.Elem().Interface()
+		return isEmpty(deref)
+	default:
+		zero := reflect.Zero(objValue.Type())
+		return reflect.DeepEqual(object, zero.Interface())
+	}
+}
+
+
 func jsonPath(reader io.Reader, expression string) (interface{}, error) {
 	v := interface{}(nil)
 	b, err := ioutil.ReadAll(reader)

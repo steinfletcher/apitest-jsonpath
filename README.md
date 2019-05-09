@@ -15,22 +15,22 @@ go get -u github.com/steinfletcher/apitest-jsonpath
 `Equals` checks for value equality when the json path expression returns a single result. Given the response is `{"a": 12345}`, the result can be asserted as follows
 
 ```go
-	apitest.New(handler).
-		Get("/hello").
-		Expect(t).
-		Assert(jsonpath.Equal(`$.a`, float64(12345))).
-		End()
+apitest.New(handler).
+	Get("/hello").
+	Expect(t).
+	Assert(jsonpath.Equal(`$.a`, float64(12345))).
+	End()
 ```
 
 we can also provide more complex expected values
 
 ```go
-	apitest.New().
-		Handler(handler).
-		Get("/hello").
-		Expect(t).
-		Assert(jsonpath.Equal(`$`, map[string]interface{}{"a": "hello", "b": float64(12345)})).
-		End()
+apitest.New().
+	Handler(handler).
+	Get("/hello").
+	Expect(t).
+	Assert(jsonpath.Equal(`$`, map[string]interface{}{"a": "hello", "b": float64(12345)})).
+	End()
 ```
 
 given the response is `{"a": "hello", "b": 12345}` 
@@ -40,12 +40,12 @@ given the response is `{"a": "hello", "b": 12345}`
 When the jsonpath expression returns an array, use `jsonpath.Contains` to assert the expected value is contained in the result. Given the response is `{"a": 12345, "b": [{"key": "c", "value": "result"}]}`, we can assert on the result like so
 
 ```go
-	apitest.New().
-		Handler(handler).
-		Get("/hello").
-		Expect(t).
-		Assert(jsonpath.Contains(`$.b[? @.key=="c"].value`, "result")).
-		End()
+apitest.New().
+	Handler(handler).
+	Get("/hello").
+	Expect(t).
+	Assert(jsonpath.Contains(`$.b[? @.key=="c"].value`, "result")).
+	End()
 ```
 
 ### Len
@@ -53,10 +53,24 @@ When the jsonpath expression returns an array, use `jsonpath.Contains` to assert
 Use `Len` to check to the length of the returned value.
 
 ```go
-	apitest.New().
-		Handler(handler).
-		Get("/articles?category=golang").
-		Expect(t).
-		Assert(jsonpath.Len(`$.items`, 3).
-		End()
+apitest.New().
+	Handler(handler).
+	Get("/articles?category=golang").
+	Expect(t).
+	Assert(jsonpath.Len(`$.items`, 3).
+	End()
+```
+
+### Present / NotPresent
+
+Use `Present` and `NotPresent` to check the presence of a field in the response without evaluating its value
+
+```go
+apitest.New().
+	Handler(handler).
+	Get("/hello").
+	Expect(t).
+	Assert(Present(`$.a`)).
+	Assert(NotPresent(`$.password`)).
+	End()
 ```

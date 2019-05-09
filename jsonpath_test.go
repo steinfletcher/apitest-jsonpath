@@ -153,6 +153,26 @@ func TestApiTest_Len(t *testing.T) {
 		End()
 }
 
+func TestApiTest_Present(t *testing.T) {
+	handler := http.NewServeMux()
+	handler.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+		_, err := w.Write([]byte(`{"a": 22}`))
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	apitest.New().
+		Handler(handler).
+		Get("/hello").
+		Expect(t).
+		Assert(Present(`$.a`)).
+		Assert(NotPresent(`$.password`)).
+		End()
+}
+
 func assertTrue(t *testing.T, v bool) {
 	if !v {
 		t.Error("\nexpected to be true but was false")
