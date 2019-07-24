@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/steinfletcher/apitest-jsonpath.svg?branch=master)](https://travis-ci.org/steinfletcher/apitest-jsonpath)
+
 # apitest-jsonpath
 
 This library provides jsonpath assertions for [apitest](https://github.com/steinfletcher/apitest).
