@@ -26,7 +26,8 @@ func TestApiTest_Contains(t *testing.T) {
 		Handler(handler).
 		Get("/hello").
 		Expect(t).
-		Assert(Contains(`$.b[? @.key=="c"].value`, "result")).
+		Assert(Contains(`$.b
+[? @.key=="c"].value`, "result")).
 		End()
 }
 

@@ -3,7 +3,6 @@ package jsonpath
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -26,10 +25,10 @@ func Contains(expression string, expected interface{}) apitest.Assert {
 
 		ok, found := includesElement(value, expected)
 		if !ok {
-			return errors.New(fmt.Sprintf("\"%s\" could not be applied builtin len()", expected))
+			return fmt.Errorf("\"%s\" could not be applied builtin len()", expected)
 		}
 		if !found {
-			return errors.New(fmt.Sprintf("\"%s\" does not contain \"%s\"", expected, value))
+			return fmt.Errorf("\"%s\" does not contain \"%s\"", expected, value)
 		}
 		return nil
 	}
@@ -44,7 +43,7 @@ func Equal(expression string, expected interface{}) apitest.Assert {
 		}
 
 		if !objectsAreEqual(value, expected) {
-			return errors.New(fmt.Sprintf("\"%s\" not equal to \"%s\"", value, expected))
+			return fmt.Errorf("\"%s\" not equal to \"%s\"", value, expected)
 		}
 		return nil
 	}
@@ -59,7 +58,7 @@ func Len(expression string, expectedLength int) apitest.Assert {
 
 		v := reflect.ValueOf(value)
 		if v.Len() != expectedLength {
-			return errors.New(fmt.Sprintf("\"%d\" not equal to \"%d\"", v.Len(), expectedLength))
+			return fmt.Errorf("\"%d\" not equal to \"%d\"", v.Len(), expectedLength)
 		}
 		return nil
 	}
@@ -69,7 +68,7 @@ func Present(expression string) apitest.Assert {
 	return func(res *http.Response, req *http.Request) error {
 		value, _ := jsonPath(res.Body, expression)
 		if isEmpty(value) {
-			return errors.New(fmt.Sprintf("value not present for expression: '%s'", expression))
+			return fmt.Errorf("value not present for expression: '%s'", expression)
 		}
 		return nil
 	}
@@ -79,7 +78,7 @@ func NotPresent(expression string) apitest.Assert {
 	return func(res *http.Response, req *http.Request) error {
 		value, _ := jsonPath(res.Body, expression)
 		if !isEmpty(value) {
-			return errors.New(fmt.Sprintf("value present for expression: '%s'", expression))
+			return fmt.Errorf("value present for expression: '%s'", expression)
 		}
 		return nil
 	}
@@ -89,11 +88,11 @@ func Matches(expression string, regexp string) apitest.Assert {
 	return func(res *http.Response, req *http.Request) error {
 		pattern, err := regex.Compile(regexp)
 		if err != nil {
-			return errors.New(fmt.Sprintf("invalid pattern: '%s'", regexp))
+			return fmt.Errorf("invalid pattern: '%s'", regexp)
 		}
 		value, _ := jsonPath(res.Body, expression)
 		if value == nil {
-			return errors.New(fmt.Sprintf("no match for pattern: '%s'", expression))
+			return fmt.Errorf("no match for pattern: '%s'", expression)
 		}
 		kind := reflect.ValueOf(value).Kind()
 		switch kind {
@@ -113,11 +112,11 @@ func Matches(expression string, regexp string) apitest.Assert {
 			reflect.Float64,
 			reflect.String:
 			if !pattern.Match([]byte(fmt.Sprintf("%v", value))) {
-				return errors.New(fmt.Sprintf("value '%v' does not match pattern '%v'", value, regexp))
+				return fmt.Errorf("value '%v' does not match pattern '%v'", value, regexp)
 			}
 			return nil
 		default:
-			return errors.New(fmt.Sprintf("unable to match using type: %s", kind.String()))
+			return fmt.Errorf("unable to match using type: %s", kind.String())
 		}
 	}
 }
