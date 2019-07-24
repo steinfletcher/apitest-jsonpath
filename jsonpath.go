@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"reflect"
+	regex "regexp"
 	"strings"
 
 	"github.com/PaesslerAG/jsonpath"
@@ -84,6 +85,43 @@ func NotPresent(expression string) apitest.Assert {
 	}
 }
 
+func Matches(expression string, regexp string) apitest.Assert {
+	return func(res *http.Response, req *http.Request) error {
+		pattern, err := regex.Compile(regexp)
+		if err != nil {
+			return errors.New(fmt.Sprintf("invalid pattern: '%s'", regexp))
+		}
+		value, _ := jsonPath(res.Body, expression)
+		if value == nil {
+			return errors.New(fmt.Sprintf("no match for pattern: '%s'", expression))
+		}
+		kind := reflect.ValueOf(value).Kind()
+		switch kind {
+		case reflect.Bool,
+			reflect.Int,
+			reflect.Int8,
+			reflect.Int16,
+			reflect.Int32,
+			reflect.Int64,
+			reflect.Uint,
+			reflect.Uint8,
+			reflect.Uint16,
+			reflect.Uint32,
+			reflect.Uint64,
+			reflect.Uintptr,
+			reflect.Float32,
+			reflect.Float64,
+			reflect.String:
+			if !pattern.Match([]byte(fmt.Sprintf("%v", value))) {
+				return errors.New(fmt.Sprintf("value '%v' does not match pattern '%v'", value, regexp))
+			}
+			return nil
+		default:
+			return errors.New(fmt.Sprintf("unable to match using type: %s", kind.String()))
+		}
+	}
+}
+
 func isEmpty(object interface{}) bool {
 	if object == nil {
 		return true
@@ -105,7 +143,6 @@ func isEmpty(object interface{}) bool {
 		return reflect.DeepEqual(object, zero.Interface())
 	}
 }
-
 
 func jsonPath(reader io.Reader, expression string) (interface{}, error) {
 	v := interface{}(nil)

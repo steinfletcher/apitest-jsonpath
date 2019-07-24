@@ -74,3 +74,16 @@ apitest.New().
 	Assert(NotPresent(`$.password`)).
 	End()
 ```
+
+### Matches
+
+Use `Matches` to check that a single path element of type string, number or bool matches a regular expression.
+
+```go
+apitest.New().
+	Handler(handler).
+	Get("/hello").
+	Expect(t).
+	Assert(Matches(`$.a`, `^[abc]{1,3}$`)).
+	End()
+```

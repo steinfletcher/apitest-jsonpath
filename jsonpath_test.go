@@ -1,6 +1,10 @@
 package jsonpath
 
 import (
+	"bytes"
+	"fmt"
+	"github.com/stretchr/testify/assert"
+	"io/ioutil"
 	"net/http"
 	"testing"
 
@@ -171,6 +175,74 @@ func TestApiTest_Present(t *testing.T) {
 		Assert(Present(`$.a`)).
 		Assert(NotPresent(`$.password`)).
 		End()
+}
+
+func TestApiTest_Matches(t *testing.T) {
+	testCases := [][]string{
+		{`$.aString`, `^[mot]{3}<3[AB][re]{3}$`},
+		{`$.aNumber`, `^\d$`},
+		{`$.anObject.aNumber`, `^\d\.\d{3}$`},
+		{`$.aNumberSlice[1]`, `^[80]$`},
+		{`$.anObject.aBool`, `^true$`},
+	}
+
+	handler := http.NewServeMux()
+	handler.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+		_, err := w.Write([]byte(`{"anObject":{"aString":"tom<3Beer","aNumber":7.212,"aBool":true},"aString":"tom<3Beer","aNumber":7,"aNumberSlice":[7,8,9],"aStringSlice":["7","8","9"]}`))
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	for testNumber, testCase := range testCases {
+		t.Run(fmt.Sprintf("match test %d", testNumber), func(t *testing.T) {
+			apitest.New().
+				Handler(handler).
+				Get("/hello").
+				Expect(t).
+				Assert(Matches(testCase[0], testCase[1])).
+				End()
+		})
+	}
+}
+
+func TestApiTest_Matches_FailCompile(t *testing.T) {
+	willFailToCompile := Matches(`$.b[? @.key=="c"].value`, `\`)
+	err := willFailToCompile(nil, nil)
+
+	assert.EqualError(t, err, `invalid pattern: '\'`)
+}
+
+func TestApiTest_Matches_FailForObject(t *testing.T) {
+	matcher := Matches(`$.anObject`, `.+`)
+
+	err := matcher(&http.Response{
+		Body: ioutil.NopCloser(bytes.NewBuffer([]byte(`{"anObject":{"aString":"lol"}}`))),
+	}, nil)
+
+	assert.EqualError(t, err, "unable to match using type: map")
+}
+
+func TestApiTest_Matches_FailForArray(t *testing.T) {
+	matcher := Matches(`$.aSlice`, `.+`)
+
+	err := matcher(&http.Response{
+		Body: ioutil.NopCloser(bytes.NewBuffer([]byte(`{"aSlice":[1,2,3]}`))),
+	}, nil)
+
+	assert.EqualError(t, err, "unable to match using type: slice")
+}
+
+func TestApiTest_Matches_FailForNilValue(t *testing.T) {
+	matcher := Matches(`$.nothingHere`, `.+`)
+
+	err := matcher(&http.Response{
+		Body: ioutil.NopCloser(bytes.NewBuffer([]byte(`{"aSlice":[1,2,3]}`))),
+	}, nil)
+
+	assert.EqualError(t, err, "no match for pattern: '$.nothingHere'")
 }
 
 func assertTrue(t *testing.T, v bool) {
