@@ -1,8 +1,8 @@
 language: go
 
 go:
-  - "1.11"
   - "1.12"
+  - "1.13"
 
 script:
   - diff -u <(echo -n) <(gofmt -s -d ./)
