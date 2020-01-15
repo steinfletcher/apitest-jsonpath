@@ -3,12 +3,12 @@ package jsonpath
 import (
 	"bytes"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
 	"testing"
 
 	"github.com/steinfletcher/apitest"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestApiTest_Contains(t *testing.T) {
@@ -154,6 +154,26 @@ func TestApiTest_Len(t *testing.T) {
 		Expect(t).
 		Assert(Len(`$.a`, 3)).
 		Assert(Len(`$.b`, 1)).
+		End()
+}
+
+func TestApiTest_MoreThan(t *testing.T) {
+	handler := http.NewServeMux()
+	handler.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+		_, err := w.Write([]byte(`{"a": [1, 2, 3], "b": "c"}`))
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	apitest.New().
+		Handler(handler).
+		Get("/hello").
+		Expect(t).
+		Assert(MoreThan(`$.a`, 2)).
+		Assert(MoreThan(`$.b`, 0)).
 		End()
 }
 

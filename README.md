@@ -63,6 +63,19 @@ apitest.New().
 	End()
 ```
 
+### MoreThan
+
+Use `MoreThan` to enforce a minimum length on the returned value.
+
+```go
+apitest.New().
+	Handler(handler).
+	Get("/articles?category=golang").
+	Expect(t).
+	Assert(jsonpath.MoreThan(`$.items`, 2).
+	End()
+```
+
 ### Present / NotPresent
 
 Use `Present` and `NotPresent` to check the presence of a field in the response without evaluating its value
