@@ -177,6 +177,26 @@ func TestApiTest_MoreThan(t *testing.T) {
 		End()
 }
 
+func TestApiTest_LessThan(t *testing.T) {
+	handler := http.NewServeMux()
+	handler.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+		_, err := w.Write([]byte(`{"a": [1, 2, 3], "b": "c"}`))
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	apitest.New().
+		Handler(handler).
+		Get("/hello").
+		Expect(t).
+		Assert(LessThan(`$.a`, 4)).
+		Assert(LessThan(`$.b`, 2)).
+		End()
+}
+
 func TestApiTest_Present(t *testing.T) {
 	handler := http.NewServeMux()
 	handler.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {

@@ -76,6 +76,19 @@ apitest.New().
 	End()
 ```
 
+### LessThan
+
+Use `LessThan` to enforce a maximum length on the returned value.
+
+```go
+apitest.New().
+	Handler(handler).
+	Get("/articles?category=golang").
+	Expect(t).
+	Assert(jsonpath.LessThan(`$.items`, 4).
+	End()
+```
+
 ### Present / NotPresent
 
 Use `Present` and `NotPresent` to check the presence of a field in the response without evaluating its value
