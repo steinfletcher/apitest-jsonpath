@@ -65,7 +65,7 @@ func Len(expression string, expectedLength int) apitest.Assert {
 	}
 }
 
-func MoreThan(expression string, minimumLength int) apitest.Assert {
+func GreaterThan(expression string, minimumLength int) apitest.Assert {
 	return func(res *http.Response, req *http.Request) error {
 		value, err := jsonPath(res.Body, expression)
 		if err != nil {

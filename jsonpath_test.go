@@ -157,7 +157,7 @@ func TestApiTest_Len(t *testing.T) {
 		End()
 }
 
-func TestApiTest_MoreThan(t *testing.T) {
+func TestApiTest_GreaterThan(t *testing.T) {
 	handler := http.NewServeMux()
 	handler.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -172,8 +172,8 @@ func TestApiTest_MoreThan(t *testing.T) {
 		Handler(handler).
 		Get("/hello").
 		Expect(t).
-		Assert(MoreThan(`$.a`, 2)).
-		Assert(MoreThan(`$.b`, 0)).
+		Assert(GreaterThan(`$.a`, 2)).
+		Assert(GreaterThan(`$.b`, 0)).
 		End()
 }
 

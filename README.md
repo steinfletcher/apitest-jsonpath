@@ -35,7 +35,7 @@ apitest.New().
 	End()
 ```
 
-given the response is `{"a": "hello", "b": 12345}` 
+given the response is `{"a": "hello", "b": 12345}`
 
 ### Contains
 
@@ -63,16 +63,16 @@ apitest.New().
 	End()
 ```
 
-### MoreThan
+### GreaterThan
 
-Use `MoreThan` to enforce a minimum length on the returned value.
+Use `GreaterThan` to enforce a minimum length on the returned value.
 
 ```go
 apitest.New().
 	Handler(handler).
 	Get("/articles?category=golang").
 	Expect(t).
-	Assert(jsonpath.MoreThan(`$.items`, 2).
+	Assert(jsonpath.GreaterThan(`$.items`, 2).
 	End()
 ```
 
