@@ -29,7 +29,7 @@ func Contains(expression string, expected interface{}) apitest.Assert {
 			return errors.New(fmt.Sprintf("\"%s\" could not be applied builtin len()", expected))
 		}
 		if !found {
-			return errors.New(fmt.Sprintf("\"%s\" does not contain \"%s\"", expected, value))
+			return errors.New(fmt.Sprintf("\"%s\" does not contain \"%s\"", value, expected))
 		}
 		return nil
 	}
