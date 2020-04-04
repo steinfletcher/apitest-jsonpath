@@ -115,3 +115,23 @@ apitest.New().
 	Assert(Matches(`$.a`, `^[abc]{1,3}$`)).
 	End()
 ```
+
+### JWT matchers
+
+`JWTHeaderEqual` and `JWTPayloadEqual` can be used to assert on the contents of the JWT in the response (it does not verify a JWT).
+
+```go
+func TestX(t *testing.T) {
+	apitest.New().
+		HandlerFunc(myHandler).
+		Post("/login").
+		Expect(t).
+		Assert(jsonpath.JWTPayloadEqual(fromAuthHeader, `$.sub`, "1234567890")).
+		Assert(jsonpath.JWTHeaderEqual(fromAuthHeader, `$.alg`, "HS256")).
+		End()
+}
+
+func fromAuthHeader(res *http.Response) (string, error) {
+	return res.Header.Get("Authorization"), nil
+}
+```
