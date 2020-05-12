@@ -12,6 +12,8 @@ github.com/steinfletcher/apitest v1.4.5 h1:BfKcS94yzsXomRV0Ojto999uziGGEz+AHh0iQ
 github.com/steinfletcher/apitest v1.4.5/go.mod h1:yaYc9GDlj4fa0qUUDywqAmrELlNbDrBwd36Zgo5hMZo=
 github.com/steinfletcher/apitest v1.4.6 h1:7IhnjUVTdKdNIhsHskIDNhN5JJbxuv1+e42LFDSxnjI=
 github.com/steinfletcher/apitest v1.4.6/go.mod h1:yaYc9GDlj4fa0qUUDywqAmrELlNbDrBwd36Zgo5hMZo=
+github.com/steinfletcher/apitest v1.4.7 h1:uZ8YsCN2D0466Qe0VJC3Wc7mIl7Xm0LG8od2wUW9Iqo=
+github.com/steinfletcher/apitest v1.4.7/go.mod h1:yaYc9GDlj4fa0qUUDywqAmrELlNbDrBwd36Zgo5hMZo=
 github.com/stretchr/objx v0.1.0 h1:4G4v2dO3VZwixGIRoQ5Lfboy6nUhCyYzaqnIAPPhYs4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.5.1 h1:nOGnQDM7FYENwehXlg/kFVnos3rEvtKTjRvOWSzb6H4=
