@@ -188,7 +188,7 @@ func jsonPath(reader io.Reader, expression string) (interface{}, error) {
 
 	value, err := jsonpath.Get(expression, v)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("evaluating '%s' resulted in error: '%s'", expression, err)
 	}
 	return value, nil
 }
