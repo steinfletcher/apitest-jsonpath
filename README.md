@@ -98,8 +98,8 @@ apitest.New().
 	Handler(handler).
 	Get("/hello").
 	Expect(t).
-	Assert(Present(`$.a`)).
-	Assert(NotPresent(`$.password`)).
+	Assert(jsonpath.Present(`$.a`)).
+	Assert(jsonpath.NotPresent(`$.password`)).
 	End()
 ```
 
@@ -112,7 +112,7 @@ apitest.New().
 	Handler(handler).
 	Get("/hello").
 	Expect(t).
-	Assert(Matches(`$.a`, `^[abc]{1,3}$`)).
+	Assert(jsonpath.Matches(`$.a`, `^[abc]{1,3}$`)).
 	End()
 ```
 
