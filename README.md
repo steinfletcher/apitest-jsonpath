@@ -14,32 +14,30 @@ go get -u github.com/steinfletcher/apitest-jsonpath
 
 ### Equals
 
-`Equals` checks for value equality when the json path expression returns a single result. Given the response is `{"a": 12345}`, the result can be asserted as follows
+`Equals` checks for value equality when the json path expression returns a single result. Given the response is `{"id": 12345}`
 
 ```go
 apitest.New(handler).
 	Get("/hello").
 	Expect(t).
-	Assert(jsonpath.Equal(`$.a`, float64(12345))).
+	Assert(jsonpath.Equal(`$.id`, float64(12345))).
 	End()
 ```
 
-we can also provide more complex expected values
+We can also provide more complex expected values. Given the response `{"message": "hello", "id": 12345}`.
 
 ```go
 apitest.New().
 	Handler(handler).
 	Get("/hello").
 	Expect(t).
-	Assert(jsonpath.Equal(`$`, map[string]interface{}{"a": "hello", "b": float64(12345)})).
+	Assert(jsonpath.Equal(`$`, map[string]interface{}{"message": "hello", "id": float64(12345)})).
 	End()
 ```
 
-given the response is `{"a": "hello", "b": 12345}`
-
 ### Contains
 
-When the jsonpath expression returns an array, use `jsonpath.Contains` to assert the expected value is contained in the result. Given the response is `{"a": 12345, "b": [{"key": "c", "value": "result"}]}`, we can assert on the result like so
+When the jsonpath expression returns an array, use `Contains` to assert that the expected value is contained in the result. Given the response is `{"a": 12345, "b": [{"key": "c", "value": "result"}]}`, we can assert on the result like so
 
 ```go
 apitest.New().
@@ -50,9 +48,36 @@ apitest.New().
 	End()
 ```
 
+### Present / NotPresent
+
+Use `Present` and `NotPresent` to check the presence of a field in the response without evaluating its value.
+
+```go
+apitest.New().
+	Handler(handler).
+	Get("/hello").
+	Expect(t).
+	Assert(jsonpath.Present(`$.a`)).
+	Assert(jsonpath.NotPresent(`$.password`)).
+	End()
+```
+
+### Matches
+
+Use `Matches` to check that a single path element of type string, number or bool matches a regular expression.
+
+```go
+apitest.New().
+	Handler(handler).
+	Get("/hello").
+	Expect(t).
+	Assert(jsonpath.Matches(`$.a`, `^[abc]{1,3}$`)).
+	End()
+```
+
 ### Len
 
-Use `Len` to check to the length of the returned value.
+Use `Len` to check to the length of the returned value. Given the response is `{"items": [1, 2, 3]}`, we can assert on the length of items like so
 
 ```go
 apitest.New().
@@ -86,33 +111,6 @@ apitest.New().
 	Get("/articles?category=golang").
 	Expect(t).
 	Assert(jsonpath.LessThan(`$.items`, 4).
-	End()
-```
-
-### Present / NotPresent
-
-Use `Present` and `NotPresent` to check the presence of a field in the response without evaluating its value
-
-```go
-apitest.New().
-	Handler(handler).
-	Get("/hello").
-	Expect(t).
-	Assert(Present(`$.a`)).
-	Assert(NotPresent(`$.password`)).
-	End()
-```
-
-### Matches
-
-Use `Matches` to check that a single path element of type string, number or bool matches a regular expression.
-
-```go
-apitest.New().
-	Handler(handler).
-	Get("/hello").
-	Expect(t).
-	Assert(Matches(`$.a`, `^[abc]{1,3}$`)).
 	End()
 ```
 
