@@ -84,7 +84,7 @@ apitest.New().
 	Handler(handler).
 	Get("/articles?category=golang").
 	Expect(t).
-	Assert(jsonpath.Len(`$.items`, 3).
+	Assert(jsonpath.Len(`$.items`, 3)).
 	End()
 ```
 
@@ -97,7 +97,7 @@ apitest.New().
 	Handler(handler).
 	Get("/articles?category=golang").
 	Expect(t).
-	Assert(jsonpath.GreaterThan(`$.items`, 2).
+	Assert(jsonpath.GreaterThan(`$.items`, 2)).
 	End()
 ```
 
@@ -110,7 +110,7 @@ apitest.New().
 	Handler(handler).
 	Get("/articles?category=golang").
 	Expect(t).
-	Assert(jsonpath.LessThan(`$.items`, 4).
+	Assert(jsonpath.LessThan(`$.items`, 4)).
 	End()
 ```
 
