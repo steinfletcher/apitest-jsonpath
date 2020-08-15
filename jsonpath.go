@@ -50,6 +50,21 @@ func Equal(expression string, expected interface{}) apitest.Assert {
 	}
 }
 
+// NotEqual is a function to check json path expression value is not equal to given value
+func NotEqual(expression string, expected interface{}) apitest.Assert {
+	return func(res *http.Response, req *http.Request) error {
+		value, err := jsonPath(res.Body, expression)
+		if err != nil {
+			return err
+		}
+
+		if objectsAreEqual(value, expected) {
+			return errors.New(fmt.Sprintf("\"%s\" value is equal to \"%s\"", expression, expected))
+		}
+		return nil
+	}
+}
+
 func Len(expression string, expectedLength int) apitest.Assert {
 	return func(res *http.Response, req *http.Request) error {
 		value, err := jsonPath(res.Body, expression)

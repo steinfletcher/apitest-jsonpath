@@ -35,6 +35,31 @@ apitest.New().
 	End()
 ```
 
+### NotEquals
+
+`NotEquals` checks that the json path expression value is not equal to given value
+
+```go
+apitest.New(handler).
+	Get("/hello").
+	Expect(t).
+	Assert(jsonpath.NotEqual(`$.a`, float64(56789))).
+	End()
+```
+
+we can also provide more complex expected values
+
+```go
+apitest.New().
+	Handler(handler).
+	Get("/hello").
+	Expect(t).
+	Assert(jsonpath.Equal(`$`, map[string]interface{}{"a": "hello", "b": float64(56789)})).
+	End()
+```
+
+given the response is `{"a": "hello", "b": 12345}`
+
 ### Contains
 
 When the jsonpath expression returns an array, use `Contains` to assert that the expected value is contained in the result. Given the response is `{"a": 12345, "b": [{"key": "c", "value": "result"}]}`, we can assert on the result like so
