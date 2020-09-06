@@ -89,6 +89,63 @@ func TestApiTest_Equal_Map(t *testing.T) {
 		End()
 }
 
+func TestApiTest_NotEqual_Numeric(t *testing.T) {
+	handler := http.NewServeMux()
+	handler.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+		_, err := w.Write([]byte(`{"a": 12345, "b": [{"key": "c", "value": "result"}]}`))
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	apitest.New().
+		Handler(handler).
+		Get("/hello").
+		Expect(t).
+		Assert(jsonpath.NotEqual(`$.a`, float64(1))).
+		End()
+}
+
+func TestApiTest_NotEqual_String(t *testing.T) {
+	handler := http.NewServeMux()
+	handler.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+		_, err := w.Write([]byte(`{"a": "12345", "b": [{"key": "c", "value": "result"}]}`))
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	apitest.New().
+		Handler(handler).
+		Get("/hello").
+		Expect(t).
+		Assert(jsonpath.NotEqual(`$.a`, "1")).
+		End()
+}
+
+func TestApiTest_NotEqual_Map(t *testing.T) {
+	handler := http.NewServeMux()
+	handler.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+		_, err := w.Write([]byte(`{"a": "hello", "b": 12345}`))
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	apitest.New().
+		Handler(handler).
+		Get("/hello").
+		Expect(t).
+		Assert(jsonpath.NotEqual(`$`, map[string]interface{}{"a": "hello", "b": float64(1)})).
+		End()
+}
+
 func TestApiTest_Len(t *testing.T) {
 	handler := http.NewServeMux()
 	handler.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
