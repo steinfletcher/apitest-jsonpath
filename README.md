@@ -12,9 +12,9 @@ go get -u github.com/steinfletcher/apitest-jsonpath
 
 ## Examples
 
-### Equals
+### Equal
 
-`Equals` checks for value equality when the json path expression returns a single result. Given the response is `{"id": 12345}`
+`Equal` checks for value equality when the json path expression returns a single result. Given the response is `{"id": 12345}`
 
 ```go
 apitest.New(handler).
@@ -35,9 +35,9 @@ apitest.New().
 	End()
 ```
 
-### NotEquals
+### NotEqual
 
-`NotEquals` checks that the json path expression value is not equal to given value
+`NotEqual` checks that the json path expression value is not equal to given value
 
 ```go
 apitest.New(handler).
