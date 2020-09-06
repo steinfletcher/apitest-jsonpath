@@ -257,6 +257,54 @@ func TestApiTest_Matches(t *testing.T) {
 	}
 }
 
+func TestApiTest_Chain(t *testing.T) {
+	handler := http.NewServeMux()
+	handler.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+		_, err := w.Write([]byte(`{
+		  "a": {
+			"b": {
+			  "c": {
+				"d": 1,
+				"e": "2",
+				"f": [3, 4, 5]
+			  }
+			}
+		  }
+		}`))
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	apitest.New().
+		Handler(handler).
+		Get("/hello").
+		Expect(t).
+		Assert(
+			jsonpath.Root("$.a.b.c").
+				Equal("d", float64(1)).
+				Equal("e", "2").
+				Contains("f", float64(5)).
+				End(),
+		).
+		End()
+
+	apitest.New().
+		Handler(handler).
+		Get("/hello").
+		Expect(t).
+		Assert(
+			jsonpath.Chain().
+				Equal("a.b.c.d", float64(1)).
+				Equal("a.b.c.e", "2").
+				Contains("a.b.c.f", float64(5)).
+				End(),
+		).
+		End()
+}
+
 func TestApiTest_Matches_FailCompile(t *testing.T) {
 	willFailToCompile := jsonpath.Matches(`$.b[? @.key=="c"].value`, `\`)
 	err := willFailToCompile(nil, nil)

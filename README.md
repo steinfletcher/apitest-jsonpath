@@ -158,3 +158,39 @@ func fromAuthHeader(res *http.Response) (string, error) {
 	return res.Header.Get("Authorization"), nil
 }
 ```
+
+### Chain
+
+`Chain` is used to provide several assertions at once
+
+```go
+Assert(
+	jsonpath.Chain().
+		Equal("a", "1").
+		NotEqual("b", "2").
+		Present("c").
+		End(),
+).
+```
+
+### Root
+
+`Root` is used to avoid duplicated paths in body expectations. For example, instead of writing:
+
+```go
+Assert(jsonpath.Equal("a.b.c.d", "a").
+Assert(jsonpath.Equal("a.b.c.e", "b").
+Assert(jsonpath.Equal("a.b.c.f", "c").
+```
+
+it is possible to define a root path like so
+
+```go
+Assert(
+	jsonpath.Root("$.a.b.c").
+		Equal("d", "a").
+		Equal("e", "b").
+		Equal("f", "c").
+		End(),
+).
+```
