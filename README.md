@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/steinfletcher/apitest-jsonpath.svg?branch=master)](https://travis-ci.org/steinfletcher/apitest-jsonpath)
+![Test](https://github.com/steinfletcher/apitest-jsonpath/workflows/Test/badge.svg)
 
 # apitest-jsonpath
 
