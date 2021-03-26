@@ -4,6 +4,6 @@ go 1.13
 
 require (
 	github.com/PaesslerAG/jsonpath v0.1.1
-	github.com/steinfletcher/apitest v1.4.15
-	github.com/stretchr/testify v1.6.1
+	github.com/steinfletcher/apitest v1.5.3
+	github.com/stretchr/testify v1.7.0
 )
