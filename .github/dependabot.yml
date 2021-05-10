@@ -1,0 +1,18 @@
+version: 2
+updates:
+- package-ecosystem: gomod
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: github.com/steinfletcher/apitest
+    versions:
+    - 1.4.16
+    - 1.5.0
+    - 1.5.1
+    - 1.5.2
+    - 1.5.4
+  - dependency-name: github.com/stretchr/testify
+    versions:
+    - 1.7.0
