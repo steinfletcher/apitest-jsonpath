@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-
-	"github.com/steinfletcher/apitest"
 )
 
 const (
@@ -16,15 +14,15 @@ const (
 	jwtPayloadIndex = 1
 )
 
-func JWTHeaderEqual(tokenSelector func(*http.Response) (string, error), expression string, expected interface{}) apitest.Assert {
+func JWTHeaderEqual(tokenSelector func(*http.Response) (string, error), expression string, expected interface{}) func(*http.Response, *http.Request) error {
 	return jwtEqual(tokenSelector, expression, expected, jwtHeaderIndex)
 }
 
-func JWTPayloadEqual(tokenSelector func(*http.Response) (string, error), expression string, expected interface{}) apitest.Assert {
+func JWTPayloadEqual(tokenSelector func(*http.Response) (string, error), expression string, expected interface{}) func(*http.Response, *http.Request) error {
 	return jwtEqual(tokenSelector, expression, expected, jwtPayloadIndex)
 }
 
-func jwtEqual(tokenSelector func(*http.Response) (string, error), expression string, expected interface{}, index int) apitest.Assert {
+func jwtEqual(tokenSelector func(*http.Response) (string, error), expression string, expected interface{}, index int) func(*http.Response, *http.Request) error {
 	return func(response *http.Response, request *http.Request) error {
 		token, err := tokenSelector(response)
 		if err != nil {

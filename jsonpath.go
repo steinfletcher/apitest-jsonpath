@@ -14,11 +14,10 @@ import (
 	"strings"
 
 	"github.com/PaesslerAG/jsonpath"
-	"github.com/steinfletcher/apitest"
 )
 
 // Contains is a convenience function to assert that a jsonpath expression extracts a value in an array
-func Contains(expression string, expected interface{}) apitest.Assert {
+func Contains(expression string, expected interface{}) func(*http.Response, *http.Request) error {
 	return func(res *http.Response, req *http.Request) error {
 		value, err := jsonPath(res.Body, expression)
 		if err != nil {
@@ -37,7 +36,7 @@ func Contains(expression string, expected interface{}) apitest.Assert {
 }
 
 // Equal is a convenience function to assert that a jsonpath expression extracts a value
-func Equal(expression string, expected interface{}) apitest.Assert {
+func Equal(expression string, expected interface{}) func(*http.Response, *http.Request) error {
 	return func(res *http.Response, req *http.Request) error {
 		value, err := jsonPath(res.Body, expression)
 		if err != nil {
@@ -52,7 +51,7 @@ func Equal(expression string, expected interface{}) apitest.Assert {
 }
 
 // NotEqual is a function to check json path expression value is not equal to given value
-func NotEqual(expression string, expected interface{}) apitest.Assert {
+func NotEqual(expression string, expected interface{}) func(*http.Response, *http.Request) error {
 	return func(res *http.Response, req *http.Request) error {
 		value, err := jsonPath(res.Body, expression)
 		if err != nil {
@@ -67,7 +66,7 @@ func NotEqual(expression string, expected interface{}) apitest.Assert {
 }
 
 // Len asserts that value is the expected length, determined by reflect.Len
-func Len(expression string, expectedLength int) apitest.Assert {
+func Len(expression string, expectedLength int) func(*http.Response, *http.Request) error {
 	return func(res *http.Response, req *http.Request) error {
 		value, err := jsonPath(res.Body, expression)
 		if err != nil {
@@ -83,7 +82,7 @@ func Len(expression string, expectedLength int) apitest.Assert {
 }
 
 // GreaterThan asserts that value is greater than the given length, determined by reflect.Len
-func GreaterThan(expression string, minimumLength int) apitest.Assert {
+func GreaterThan(expression string, minimumLength int) func(*http.Response, *http.Request) error {
 	return func(res *http.Response, req *http.Request) error {
 		value, err := jsonPath(res.Body, expression)
 		if err != nil {
@@ -99,7 +98,7 @@ func GreaterThan(expression string, minimumLength int) apitest.Assert {
 }
 
 // LessThan asserts that value is less than the given length, determined by reflect.Len
-func LessThan(expression string, maximumLength int) apitest.Assert {
+func LessThan(expression string, maximumLength int) func(*http.Response, *http.Request) error {
 	return func(res *http.Response, req *http.Request) error {
 		value, err := jsonPath(res.Body, expression)
 		if err != nil {
@@ -115,7 +114,7 @@ func LessThan(expression string, maximumLength int) apitest.Assert {
 }
 
 // Present asserts that value returned by the expression is present
-func Present(expression string) apitest.Assert {
+func Present(expression string) func(*http.Response, *http.Request) error {
 	return func(res *http.Response, req *http.Request) error {
 		value, _ := jsonPath(res.Body, expression)
 		if isEmpty(value) {
@@ -126,7 +125,7 @@ func Present(expression string) apitest.Assert {
 }
 
 // NotPresent asserts that value returned by the expression is not present
-func NotPresent(expression string) apitest.Assert {
+func NotPresent(expression string) func(*http.Response, *http.Request) error {
 	return func(res *http.Response, req *http.Request) error {
 		value, _ := jsonPath(res.Body, expression)
 		if !isEmpty(value) {
@@ -137,7 +136,7 @@ func NotPresent(expression string) apitest.Assert {
 }
 
 // Matches asserts that the value matches the given regular expression
-func Matches(expression string, regexp string) apitest.Assert {
+func Matches(expression string, regexp string) func(*http.Response, *http.Request) error {
 	return func(res *http.Response, req *http.Request) error {
 		pattern, err := regex.Compile(regexp)
 		if err != nil {
@@ -187,7 +186,7 @@ func Root(expression string) *AssertionChain {
 // AssertionChain supports chaining assertions and root expressions
 type AssertionChain struct {
 	rootExpression string
-	assertions     []apitest.Assert
+	assertions     []func(*http.Response, *http.Request) error
 }
 
 // Equal adds an Equal assertion to the chain
@@ -226,8 +225,8 @@ func (r *AssertionChain) Matches(expression, regexp string) *AssertionChain {
 	return r
 }
 
-// End returns an apitest.Assert which is a combination of the registered assertions
-func (r *AssertionChain) End() apitest.Assert {
+// End returns an func(*http.Response, *http.Request) error which is a combination of the registered assertions
+func (r *AssertionChain) End() func(*http.Response, *http.Request) error {
 	return func(res *http.Response, req *http.Request) error {
 		for _, assertion := range r.assertions {
 			if err := assertion(copyHttpResponse(res), copyHttpRequest(req)); err != nil {
