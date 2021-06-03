@@ -16,6 +16,7 @@ func TestMocks(t *testing.T) {
 	getUserMock := apitest.NewMock().
 		Post("/user-api").
 		AddMatcher(mocks.Equal("$.name", "jon")).
+		AddMatcher(mocks.Equal("$.name", "jon")). // ensure body can be re read after running matcher
 		RespondWith().
 		Body(`{"name": "jon", "id": "1234"}`).
 		Status(http.StatusOK).
