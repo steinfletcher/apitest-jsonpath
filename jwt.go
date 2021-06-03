@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/steinfletcher/apitest-jsonpath/jsonpath"
 	"net/http"
 	"strings"
 )
@@ -40,12 +41,12 @@ func jwtEqual(tokenSelector func(*http.Response) (string, error), expression str
 			return fmt.Errorf("Invalid jwt: %s", PayloadErr.Error())
 		}
 
-		value, err := jsonPath(bytes.NewReader(decodedPayload), expression)
+		value, err := jsonpath.JsonPath(bytes.NewReader(decodedPayload), expression)
 		if err != nil {
 			return err
 		}
 
-		if !objectsAreEqual(value, expected) {
+		if !jsonpath.ObjectsAreEqual(value, expected) {
 			return errors.New(fmt.Sprintf("\"%s\" not equal to \"%s\"", value, expected))
 		}
 
