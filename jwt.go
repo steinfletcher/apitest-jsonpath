@@ -5,9 +5,10 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/steinfletcher/apitest-jsonpath/jsonpath"
 	"net/http"
 	"strings"
+
+	"github.com/steinfletcher/apitest-jsonpath/jsonpath"
 )
 
 const (
@@ -32,13 +33,13 @@ func jwtEqual(tokenSelector func(*http.Response) (string, error), expression str
 
 		parts := strings.Split(token, ".")
 		if len(parts) != 3 {
-			splitErr := errors.New("Invalid token: token should contain header, payload and secret")
+			splitErr := errors.New("invalid token: token should contain header, payload and secret")
 			return splitErr
 		}
 
 		decodedPayload, PayloadErr := base64Decode(parts[index])
 		if PayloadErr != nil {
-			return fmt.Errorf("Invalid jwt: %s", PayloadErr.Error())
+			return fmt.Errorf("invalid jwt: %s", PayloadErr.Error())
 		}
 
 		value, err := jsonpath.JsonPath(bytes.NewReader(decodedPayload), expression)
@@ -61,7 +62,7 @@ func base64Decode(src string) ([]byte, error) {
 
 	decoded, err := base64.URLEncoding.DecodeString(src)
 	if err != nil {
-		errMsg := fmt.Errorf("Decoding Error %s", err)
+		errMsg := fmt.Errorf("decoding Error %s", err)
 		return nil, errMsg
 	}
 	return decoded, nil

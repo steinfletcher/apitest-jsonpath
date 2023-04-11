@@ -3,11 +3,12 @@ package mocks_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/steinfletcher/apitest-jsonpath/mocks"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/steinfletcher/apitest-jsonpath/mocks"
 
 	"github.com/steinfletcher/apitest"
 )

@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/PaesslerAG/jsonpath"
 	"io"
 	"io/ioutil"
 	"reflect"
 	"strings"
+
+	"github.com/PaesslerAG/jsonpath"
 )
 
 func Contains(expression string, expected interface{}, data io.Reader) error {
@@ -19,10 +20,10 @@ func Contains(expression string, expected interface{}, data io.Reader) error {
 	}
 	ok, found := IncludesElement(value, expected)
 	if !ok {
-		return errors.New(fmt.Sprintf("\"%s\" could not be applied builtin len()", expected))
+		return fmt.Errorf("\"%s\" could not be applied builtin len()", expected)
 	}
 	if !found {
-		return errors.New(fmt.Sprintf("\"%s\" does not contain \"%s\"", value, expected))
+		return fmt.Errorf("\"%s\" does not contain \"%s\"", value, expected)
 	}
 	return nil
 }
@@ -33,7 +34,7 @@ func Equal(expression string, expected interface{}, data io.Reader) error {
 		return err
 	}
 	if !ObjectsAreEqual(value, expected) {
-		return errors.New(fmt.Sprintf("\"%s\" not equal to \"%s\"", value, expected))
+		return fmt.Errorf("\"%s\" not equal to \"%s\"", value, expected)
 	}
 	return nil
 }
@@ -45,7 +46,7 @@ func NotEqual(expression string, expected interface{}, data io.Reader) error {
 	}
 
 	if ObjectsAreEqual(value, expected) {
-		return errors.New(fmt.Sprintf("\"%s\" value is equal to \"%s\"", expression, expected))
+		return fmt.Errorf("\"%s\" value is equal to \"%s\"", expression, expected)
 	}
 	return nil
 }
@@ -56,9 +57,13 @@ func Length(expression string, expectedLength int, data io.Reader) error {
 		return err
 	}
 
+	if value == nil {
+		return errors.New("value is null")
+	}
+
 	v := reflect.ValueOf(value)
 	if v.Len() != expectedLength {
-		return errors.New(fmt.Sprintf("\"%d\" not equal to \"%d\"", v.Len(), expectedLength))
+		return fmt.Errorf("\"%d\" not equal to \"%d\"", v.Len(), expectedLength)
 	}
 	return nil
 }
@@ -69,9 +74,13 @@ func GreaterThan(expression string, minimumLength int, data io.Reader) error {
 		return err
 	}
 
+	if value == nil {
+		return fmt.Errorf("value is null")
+	}
+
 	v := reflect.ValueOf(value)
 	if v.Len() < minimumLength {
-		return errors.New(fmt.Sprintf("\"%d\" is greater than \"%d\"", v.Len(), minimumLength))
+		return fmt.Errorf("\"%d\" is greater than \"%d\"", v.Len(), minimumLength)
 	}
 	return nil
 }
@@ -82,9 +91,13 @@ func LessThan(expression string, maximumLength int, data io.Reader) error {
 		return err
 	}
 
+	if value == nil {
+		return fmt.Errorf("value is null")
+	}
+
 	v := reflect.ValueOf(value)
 	if v.Len() > maximumLength {
-		return errors.New(fmt.Sprintf("\"%d\" is less than \"%d\"", v.Len(), maximumLength))
+		return fmt.Errorf("\"%d\" is less than \"%d\"", v.Len(), maximumLength)
 	}
 	return nil
 }
@@ -92,7 +105,7 @@ func LessThan(expression string, maximumLength int, data io.Reader) error {
 func Present(expression string, data io.Reader) error {
 	value, _ := JsonPath(data, expression)
 	if isEmpty(value) {
-		return errors.New(fmt.Sprintf("value not present for expression: '%s'", expression))
+		return fmt.Errorf("value not present for expression: '%s'", expression)
 	}
 	return nil
 }
@@ -100,7 +113,7 @@ func Present(expression string, data io.Reader) error {
 func NotPresent(expression string, data io.Reader) error {
 	value, _ := JsonPath(data, expression)
 	if !isEmpty(value) {
-		return errors.New(fmt.Sprintf("value present for expression: '%s'", expression))
+		return fmt.Errorf("value present for expression: '%s'", expression)
 	}
 	return nil
 }

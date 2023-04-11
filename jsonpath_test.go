@@ -2,6 +2,7 @@ package jsonpath_test
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -18,7 +19,7 @@ func TestApiTest_Contains(t *testing.T) {
 	handler.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
-		_, err := w.Write([]byte(`{"a": 12345, "b": [{"key": "c", "value": "result"}]}`))
+		_, err := w.Write([]byte(`{"a": 12345, "b": [{"key": "c", "value": "result"}], "d": null}`))
 		if err != nil {
 			panic(err)
 		}
@@ -151,7 +152,7 @@ func TestApiTest_Len(t *testing.T) {
 	handler.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
-		_, err := w.Write([]byte(`{"a": [1, 2, 3], "b": "c"}`))
+		_, err := w.Write([]byte(`{"a": [1, 2, 3], "b": "c", "d": null}`))
 		if err != nil {
 			panic(err)
 		}
@@ -163,6 +164,17 @@ func TestApiTest_Len(t *testing.T) {
 		Expect(t).
 		Assert(jsonpath.Len(`$.a`, 3)).
 		Assert(jsonpath.Len(`$.b`, 1)).
+		Assert(func(r1 *http.Response, r2 *http.Request) error {
+			err := jsonpath.Len(`$.d`, 0)(r1, r2)
+
+			if err == nil {
+				return errors.New("jsonpath.Len was expected to fail on null value but it didn't")
+			}
+
+			assert.EqualError(t, err, "value is null")
+
+			return nil
+		}).
 		End()
 }
 
@@ -171,7 +183,7 @@ func TestApiTest_GreaterThan(t *testing.T) {
 	handler.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
-		_, err := w.Write([]byte(`{"a": [1, 2, 3], "b": "c"}`))
+		_, err := w.Write([]byte(`{"a": [1, 2, 3], "b": "c", "d": null}`))
 		if err != nil {
 			panic(err)
 		}
@@ -183,6 +195,17 @@ func TestApiTest_GreaterThan(t *testing.T) {
 		Expect(t).
 		Assert(jsonpath.GreaterThan(`$.a`, 2)).
 		Assert(jsonpath.GreaterThan(`$.b`, 0)).
+		Assert(func(r1 *http.Response, r2 *http.Request) error {
+			err := jsonpath.GreaterThan(`$.d`, 5)(r1, r2)
+
+			if err == nil {
+				return errors.New("jsonpath.GreaterThan was expected to fail on null value but it didn't")
+			}
+
+			assert.EqualError(t, err, "value is null")
+
+			return nil
+		}).
 		End()
 }
 
@@ -191,7 +214,7 @@ func TestApiTest_LessThan(t *testing.T) {
 	handler.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
-		_, err := w.Write([]byte(`{"a": [1, 2, 3], "b": "c"}`))
+		_, err := w.Write([]byte(`{"a": [1, 2, 3], "b": "c", "d": null}`))
 		if err != nil {
 			panic(err)
 		}
@@ -203,6 +226,17 @@ func TestApiTest_LessThan(t *testing.T) {
 		Expect(t).
 		Assert(jsonpath.LessThan(`$.a`, 4)).
 		Assert(jsonpath.LessThan(`$.b`, 2)).
+		Assert(func(r1 *http.Response, r2 *http.Request) error {
+			err := jsonpath.LessThan(`$.d`, 5)(r1, r2)
+
+			if err == nil {
+				return errors.New("jsonpath.LessThan was expected to fail on null value but it didn't")
+			}
+
+			assert.EqualError(t, err, "value is null")
+
+			return nil
+		}).
 		End()
 }
 
@@ -263,15 +297,15 @@ func TestApiTest_Chain(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
 		_, err := w.Write([]byte(`{
-		  "a": {
+			"a": {
 			"b": {
-			  "c": {
+				"c": {
 				"d": 1,
 				"e": "2",
 				"f": [3, 4, 5]
-			  }
+				}
 			}
-		  }
+			}
 		}`))
 		if err != nil {
 			panic(err)

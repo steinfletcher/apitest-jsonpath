@@ -1,10 +1,11 @@
 package mocks
 
 import (
+	"net/http"
+
 	"github.com/steinfletcher/apitest"
 	httputil "github.com/steinfletcher/apitest-jsonpath/http"
 	"github.com/steinfletcher/apitest-jsonpath/jsonpath"
-	"net/http"
 )
 
 // Contains is a convenience function to assert that a jsonpath expression extracts a value in an array
