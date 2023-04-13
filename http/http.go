@@ -70,4 +70,3 @@ func CopyRequest(request *http.Request) *http.Request {
 
 	return resCopy
 }
-

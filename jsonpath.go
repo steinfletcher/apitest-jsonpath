@@ -1,13 +1,13 @@
 package jsonpath
 
 import (
-	"errors"
 	"fmt"
-	httputil "github.com/steinfletcher/apitest-jsonpath/http"
-	"github.com/steinfletcher/apitest-jsonpath/jsonpath"
 	"net/http"
 	"reflect"
 	regex "regexp"
+
+	httputil "github.com/steinfletcher/apitest-jsonpath/http"
+	"github.com/steinfletcher/apitest-jsonpath/jsonpath"
 )
 
 // Contains is a convenience function to assert that a jsonpath expression extracts a value in an array
@@ -71,11 +71,11 @@ func Matches(expression string, regexp string) func(*http.Response, *http.Reques
 	return func(res *http.Response, req *http.Request) error {
 		pattern, err := regex.Compile(regexp)
 		if err != nil {
-			return errors.New(fmt.Sprintf("invalid pattern: '%s'", regexp))
+			return fmt.Errorf("invalid pattern: '%s'", regexp)
 		}
 		value, _ := jsonpath.JsonPath(res.Body, expression)
 		if value == nil {
-			return errors.New(fmt.Sprintf("no match for pattern: '%s'", expression))
+			return fmt.Errorf("no match for pattern: '%s'", expression)
 		}
 		kind := reflect.ValueOf(value).Kind()
 		switch kind {
@@ -95,11 +95,11 @@ func Matches(expression string, regexp string) func(*http.Response, *http.Reques
 			reflect.Float64,
 			reflect.String:
 			if !pattern.Match([]byte(fmt.Sprintf("%v", value))) {
-				return errors.New(fmt.Sprintf("value '%v' does not match pattern '%v'", value, regexp))
+				return fmt.Errorf("value '%v' does not match pattern '%v'", value, regexp)
 			}
 			return nil
 		default:
-			return errors.New(fmt.Sprintf("unable to match using type: %s", kind.String()))
+			return fmt.Errorf("unable to match using type: %s", kind.String())
 		}
 	}
 }
