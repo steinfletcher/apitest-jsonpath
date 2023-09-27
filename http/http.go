@@ -2,7 +2,7 @@ package http
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 )
@@ -14,15 +14,15 @@ func CopyResponse(response *http.Response) *http.Response {
 
 	var resBodyBytes []byte
 	if response.Body != nil {
-		resBodyBytes, _ = ioutil.ReadAll(response.Body)
-		response.Body = ioutil.NopCloser(bytes.NewBuffer(resBodyBytes))
+		resBodyBytes, _ = io.ReadAll(response.Body)
+		response.Body = io.NopCloser(bytes.NewBuffer(resBodyBytes))
 	}
 
 	resCopy := &http.Response{
 		Header:        map[string][]string{},
 		StatusCode:    response.StatusCode,
 		Status:        response.Status,
-		Body:          ioutil.NopCloser(bytes.NewBuffer(resBodyBytes)),
+		Body:          io.NopCloser(bytes.NewBuffer(resBodyBytes)),
 		Proto:         response.Proto,
 		ProtoMinor:    response.ProtoMinor,
 		ProtoMajor:    response.ProtoMajor,
@@ -49,9 +49,9 @@ func CopyRequest(request *http.Request) *http.Request {
 	resCopy = resCopy.WithContext(request.Context())
 
 	if request.Body != nil {
-		bodyBytes, _ := ioutil.ReadAll(request.Body)
-		resCopy.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
-		request.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
+		bodyBytes, _ := io.ReadAll(request.Body)
+		resCopy.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+		request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 	}
 
 	if request.URL != nil {

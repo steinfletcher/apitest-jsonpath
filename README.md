@@ -31,7 +31,7 @@ apitest.New().
 	Handler(handler).
 	Get("/hello").
 	Expect(t).
-	Assert(jsonpath.Equal(`$`, map[string]interface{}{"message": "hello", "id": float64(12345)})).
+	Assert(jsonpath.Equal(`$`, map[string]any{"message": "hello", "id": float64(12345)})).
 	End()
 ```
 
@@ -54,7 +54,7 @@ apitest.New().
 	Handler(handler).
 	Get("/hello").
 	Expect(t).
-	Assert(jsonpath.NotEqual(`$`, map[string]interface{}{"a": "hello", "b": float64(56789)})).
+	Assert(jsonpath.NotEqual(`$`, map[string]{"a": "hello", "b": float64(56789)})).
 	End()
 ```
 
