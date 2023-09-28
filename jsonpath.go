@@ -11,22 +11,32 @@ import (
 )
 
 // Contains is a convenience function to assert that a jsonpath expression extracts a value in an array
-func Contains(expression string, expected interface{}) func(*http.Response, *http.Request) error {
+func Contains(expression string, expected any) func(*http.Response, *http.Request) error {
 	return func(res *http.Response, req *http.Request) error {
 		return jsonpath.Contains(expression, expected, res.Body)
 	}
 }
 
 // Equal is a convenience function to assert that a jsonpath expression extracts a value
-func Equal(expression string, expected interface{}) func(*http.Response, *http.Request) error {
+func Equal(expression string, expected any) func(*http.Response, *http.Request) error {
 	return func(res *http.Response, req *http.Request) error {
+		defer func() {
+			if resErr := res.Body.Close(); resErr != nil {
+				panic(resErr)
+			}
+		}()
 		return jsonpath.Equal(expression, expected, res.Body)
 	}
 }
 
 // NotEqual is a function to check json path expression value is not equal to given value
-func NotEqual(expression string, expected interface{}) func(*http.Response, *http.Request) error {
+func NotEqual(expression string, expected any) func(*http.Response, *http.Request) error {
 	return func(res *http.Response, req *http.Request) error {
+		defer func() {
+			if resErr := res.Body.Close(); resErr != nil {
+				panic(resErr)
+			}
+		}()
 		return jsonpath.NotEqual(expression, expected, res.Body)
 	}
 }
@@ -34,6 +44,11 @@ func NotEqual(expression string, expected interface{}) func(*http.Response, *htt
 // Len asserts that value is the expected length, determined by reflect.Len
 func Len(expression string, expectedLength int) func(*http.Response, *http.Request) error {
 	return func(res *http.Response, req *http.Request) error {
+		defer func() {
+			if resErr := res.Body.Close(); resErr != nil {
+				panic(resErr)
+			}
+		}()
 		return jsonpath.Length(expression, expectedLength, res.Body)
 	}
 }
@@ -41,6 +56,11 @@ func Len(expression string, expectedLength int) func(*http.Response, *http.Reque
 // GreaterThan asserts that value is greater than the given length, determined by reflect.Len
 func GreaterThan(expression string, minimumLength int) func(*http.Response, *http.Request) error {
 	return func(res *http.Response, req *http.Request) error {
+		defer func() {
+			if resErr := res.Body.Close(); resErr != nil {
+				panic(resErr)
+			}
+		}()
 		return jsonpath.GreaterThan(expression, minimumLength, res.Body)
 	}
 }
@@ -48,6 +68,11 @@ func GreaterThan(expression string, minimumLength int) func(*http.Response, *htt
 // LessThan asserts that value is less than the given length, determined by reflect.Len
 func LessThan(expression string, maximumLength int) func(*http.Response, *http.Request) error {
 	return func(res *http.Response, req *http.Request) error {
+		defer func() {
+			if resErr := res.Body.Close(); resErr != nil {
+				panic(resErr)
+			}
+		}()
 		return jsonpath.LessThan(expression, maximumLength, res.Body)
 	}
 }
@@ -55,6 +80,11 @@ func LessThan(expression string, maximumLength int) func(*http.Response, *http.R
 // Present asserts that value returned by the expression is present
 func Present(expression string) func(*http.Response, *http.Request) error {
 	return func(res *http.Response, req *http.Request) error {
+		defer func() {
+			if resErr := res.Body.Close(); resErr != nil {
+				panic(resErr)
+			}
+		}()
 		return jsonpath.Present(expression, res.Body)
 	}
 }
@@ -62,13 +92,24 @@ func Present(expression string) func(*http.Response, *http.Request) error {
 // NotPresent asserts that value returned by the expression is not present
 func NotPresent(expression string) func(*http.Response, *http.Request) error {
 	return func(res *http.Response, req *http.Request) error {
+		defer func() {
+			if resErr := res.Body.Close(); resErr != nil {
+				panic(resErr)
+			}
+		}()
 		return jsonpath.NotPresent(expression, res.Body)
 	}
 }
 
 // Matches asserts that the value matches the given regular expression
-func Matches(expression string, regexp string) func(*http.Response, *http.Request) error {
+func Matches(expression, regexp string) func(*http.Response, *http.Request) error {
 	return func(res *http.Response, req *http.Request) error {
+		defer func() {
+			if resErr := res.Body.Close(); resErr != nil {
+				panic(resErr)
+			}
+		}()
+
 		pattern, err := regex.Compile(regexp)
 		if err != nil {
 			return fmt.Errorf("invalid pattern: '%s'", regexp)
@@ -94,7 +135,7 @@ func Matches(expression string, regexp string) func(*http.Response, *http.Reques
 			reflect.Float32,
 			reflect.Float64,
 			reflect.String:
-			if !pattern.Match([]byte(fmt.Sprintf("%v", value))) {
+			if !pattern.MatchString(fmt.Sprintf("%v", value)) {
 				return fmt.Errorf("value '%v' does not match pattern '%v'", value, regexp)
 			}
 			return nil
@@ -121,19 +162,19 @@ type AssertionChain struct {
 }
 
 // Equal adds an Equal assertion to the chain
-func (r *AssertionChain) Equal(expression string, expected interface{}) *AssertionChain {
+func (r *AssertionChain) Equal(expression string, expected any) *AssertionChain {
 	r.assertions = append(r.assertions, Equal(r.rootExpression+expression, expected))
 	return r
 }
 
 // NotEqual adds an NotEqual assertion to the chain
-func (r *AssertionChain) NotEqual(expression string, expected interface{}) *AssertionChain {
+func (r *AssertionChain) NotEqual(expression string, expected any) *AssertionChain {
 	r.assertions = append(r.assertions, NotEqual(r.rootExpression+expression, expected))
 	return r
 }
 
 // Contains adds an Contains assertion to the chain
-func (r *AssertionChain) Contains(expression string, expected interface{}) *AssertionChain {
+func (r *AssertionChain) Contains(expression string, expected any) *AssertionChain {
 	r.assertions = append(r.assertions, Contains(r.rootExpression+expression, expected))
 	return r
 }
