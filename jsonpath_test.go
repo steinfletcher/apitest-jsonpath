@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 
@@ -86,7 +86,7 @@ func TestApiTest_Equal_Map(t *testing.T) {
 		Handler(handler).
 		Get("/hello").
 		Expect(t).
-		Assert(jsonpath.Equal(`$`, map[string]interface{}{"a": "hello", "b": float64(12345)})).
+		Assert(jsonpath.Equal(`$`, map[string]any{"a": "hello", "b": float64(12345)})).
 		End()
 }
 
@@ -143,7 +143,7 @@ func TestApiTest_NotEqual_Map(t *testing.T) {
 		Handler(handler).
 		Get("/hello").
 		Expect(t).
-		Assert(jsonpath.NotEqual(`$`, map[string]interface{}{"a": "hello", "b": float64(1)})).
+		Assert(jsonpath.NotEqual(`$`, map[string]any{"a": "hello", "b": float64(1)})).
 		End()
 }
 
@@ -341,7 +341,9 @@ func TestApiTest_Chain(t *testing.T) {
 
 func TestApiTest_Matches_FailCompile(t *testing.T) {
 	willFailToCompile := jsonpath.Matches(`$.b[? @.key=="c"].value`, `\`)
-	err := willFailToCompile(nil, nil)
+	err := willFailToCompile(&http.Response{
+		Body: io.NopCloser(bytes.NewBuffer([]byte(`{"anObject":{"aString":"lol"}}`))),
+	}, nil)
 
 	assert.EqualError(t, err, `invalid pattern: '\'`)
 }
@@ -350,7 +352,7 @@ func TestApiTest_Matches_FailForObject(t *testing.T) {
 	matcher := jsonpath.Matches(`$.anObject`, `.+`)
 
 	err := matcher(&http.Response{
-		Body: ioutil.NopCloser(bytes.NewBuffer([]byte(`{"anObject":{"aString":"lol"}}`))),
+		Body: io.NopCloser(bytes.NewBuffer([]byte(`{"anObject":{"aString":"lol"}}`))),
 	}, nil)
 
 	assert.EqualError(t, err, "unable to match using type: map")
@@ -360,7 +362,7 @@ func TestApiTest_Matches_FailForArray(t *testing.T) {
 	matcher := jsonpath.Matches(`$.aSlice`, `.+`)
 
 	err := matcher(&http.Response{
-		Body: ioutil.NopCloser(bytes.NewBuffer([]byte(`{"aSlice":[1,2,3]}`))),
+		Body: io.NopCloser(bytes.NewBuffer([]byte(`{"aSlice":[1,2,3]}`))),
 	}, nil)
 
 	assert.EqualError(t, err, "unable to match using type: slice")
@@ -370,7 +372,7 @@ func TestApiTest_Matches_FailForNilValue(t *testing.T) {
 	matcher := jsonpath.Matches(`$.nothingHere`, `.+`)
 
 	err := matcher(&http.Response{
-		Body: ioutil.NopCloser(bytes.NewBuffer([]byte(`{"aSlice":[1,2,3]}`))),
+		Body: io.NopCloser(bytes.NewBuffer([]byte(`{"aSlice":[1,2,3]}`))),
 	}, nil)
 
 	assert.EqualError(t, err, "no match for pattern: '$.nothingHere'")

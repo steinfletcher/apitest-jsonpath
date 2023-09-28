@@ -16,15 +16,15 @@ const (
 	jwtPayloadIndex = 1
 )
 
-func JWTHeaderEqual(tokenSelector func(*http.Response) (string, error), expression string, expected interface{}) func(*http.Response, *http.Request) error {
+func JWTHeaderEqual(tokenSelector func(*http.Response) (string, error), expression string, expected any) func(*http.Response, *http.Request) error {
 	return jwtEqual(tokenSelector, expression, expected, jwtHeaderIndex)
 }
 
-func JWTPayloadEqual(tokenSelector func(*http.Response) (string, error), expression string, expected interface{}) func(*http.Response, *http.Request) error {
+func JWTPayloadEqual(tokenSelector func(*http.Response) (string, error), expression string, expected any) func(*http.Response, *http.Request) error {
 	return jwtEqual(tokenSelector, expression, expected, jwtPayloadIndex)
 }
 
-func jwtEqual(tokenSelector func(*http.Response) (string, error), expression string, expected interface{}, index int) func(*http.Response, *http.Request) error {
+func jwtEqual(tokenSelector func(*http.Response) (string, error), expression string, expected any, index int) func(*http.Response, *http.Request) error {
 	return func(response *http.Response, request *http.Request) error {
 		token, err := tokenSelector(response)
 		if err != nil {
@@ -48,7 +48,7 @@ func jwtEqual(tokenSelector func(*http.Response) (string, error), expression str
 		}
 
 		if !jsonpath.ObjectsAreEqual(value, expected) {
-			return errors.New(fmt.Sprintf("\"%s\" not equal to \"%s\"", value, expected))
+			return fmt.Errorf("%q not equal to %q", value, expected)
 		}
 
 		return nil

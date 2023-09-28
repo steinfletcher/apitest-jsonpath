@@ -3,7 +3,7 @@ package mocks_test
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -86,13 +86,13 @@ type userResponse struct {
 	IsContactable bool   `json:"is_contactable"`
 }
 
-func httpGet(path string, response interface{}) error {
+func httpGet(path string, response any) error {
 	res, err := http.DefaultClient.Get(fmt.Sprintf("http://localhost:8080%s", path))
 	if err != nil {
 		return err
 	}
 
-	bytes, err := ioutil.ReadAll(res.Body)
+	bytes, err := io.ReadAll(res.Body)
 	if err != nil {
 		return err
 	}
@@ -105,13 +105,13 @@ func httpGet(path string, response interface{}) error {
 	return nil
 }
 
-func httpPost(path string, requestBody string, response interface{}) error {
+func httpPost(path, requestBody string, response any) error {
 	res, err := http.DefaultClient.Post(fmt.Sprintf("http://localhost:8080%s", path), "application/json", strings.NewReader(requestBody))
 	if err != nil {
 		return err
 	}
 
-	bytes, err := ioutil.ReadAll(res.Body)
+	bytes, err := io.ReadAll(res.Body)
 	if err != nil {
 		return err
 	}
