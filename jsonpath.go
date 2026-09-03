@@ -12,21 +12,21 @@ import (
 )
 
 // Contains is a convenience function to assert that a jsonpath expression extracts a value in an array
-func Contains(expression string, expected interface{}) func(*http.Response, *http.Request) error {
+func Contains(expression string, expected any) func(*http.Response, *http.Request) error {
 	return func(res *http.Response, req *http.Request) error {
 		return jsonpath.Contains(expression, expected, res.Body)
 	}
 }
 
 // Equal is a convenience function to assert that a jsonpath expression extracts a value
-func Equal(expression string, expected interface{}) func(*http.Response, *http.Request) error {
+func Equal(expression string, expected any) func(*http.Response, *http.Request) error {
 	return func(res *http.Response, req *http.Request) error {
 		return jsonpath.Equal(expression, expected, res.Body)
 	}
 }
 
 // NotEqual is a function to check json path expression value is not equal to given value
-func NotEqual(expression string, expected interface{}) func(*http.Response, *http.Request) error {
+func NotEqual(expression string, expected any) func(*http.Response, *http.Request) error {
 	return func(res *http.Response, req *http.Request) error {
 		return jsonpath.NotEqual(expression, expected, res.Body)
 	}
@@ -125,19 +125,19 @@ type AssertionChain struct {
 }
 
 // Equal adds an Equal assertion to the chain
-func (r *AssertionChain) Equal(expression string, expected interface{}) *AssertionChain {
+func (r *AssertionChain) Equal(expression string, expected any) *AssertionChain {
 	r.assertions = append(r.assertions, Equal(r.path(expression), expected))
 	return r
 }
 
 // NotEqual adds an NotEqual assertion to the chain
-func (r *AssertionChain) NotEqual(expression string, expected interface{}) *AssertionChain {
+func (r *AssertionChain) NotEqual(expression string, expected any) *AssertionChain {
 	r.assertions = append(r.assertions, NotEqual(r.path(expression), expected))
 	return r
 }
 
 // Contains adds an Contains assertion to the chain
-func (r *AssertionChain) Contains(expression string, expected interface{}) *AssertionChain {
+func (r *AssertionChain) Contains(expression string, expected any) *AssertionChain {
 	r.assertions = append(r.assertions, Contains(r.path(expression), expected))
 	return r
 }

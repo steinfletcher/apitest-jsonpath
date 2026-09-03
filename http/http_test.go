@@ -2,7 +2,7 @@ package http
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	nethttp "net/http"
 	"net/http/httptest"
 	"testing"
@@ -12,7 +12,7 @@ func TestCopyResponse(t *testing.T) {
 	original := &nethttp.Response{
 		StatusCode: nethttp.StatusOK,
 		Header:     nethttp.Header{"X-Custom": {"a"}},
-		Body:       ioutil.NopCloser(bytes.NewBufferString("body")),
+		Body:       io.NopCloser(bytes.NewBufferString("body")),
 	}
 
 	copied := CopyResponse(original)
@@ -23,7 +23,7 @@ func TestCopyResponse(t *testing.T) {
 		t.Fatalf("expected the original headers to be untouched, got %v", got)
 	}
 	for name, body := range map[string]*nethttp.Response{"copy": copied, "original": original} {
-		b, _ := ioutil.ReadAll(body.Body)
+		b, _ := io.ReadAll(body.Body)
 		if string(b) != "body" {
 			t.Fatalf("expected %s body to be readable, got %q", name, b)
 		}
@@ -45,7 +45,7 @@ func TestCopyRequest(t *testing.T) {
 		t.Fatalf("expected the original request to be untouched, got %v %s", original.Header, original.URL)
 	}
 	for name, req := range map[string]*nethttp.Request{"copy": copied, "original": original} {
-		b, _ := ioutil.ReadAll(req.Body)
+		b, _ := io.ReadAll(req.Body)
 		if string(b) != "body" {
 			t.Fatalf("expected %s body to be readable, got %q", name, b)
 		}

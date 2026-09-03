@@ -85,7 +85,7 @@ func TestLessThan(t *testing.T) {
 func TestContains(t *testing.T) {
 	tests := map[string]struct {
 		body     string
-		expected interface{}
+		expected any
 		err      string
 	}{
 		"number in array":      {`{"items": [1, 2]}`, float64(2), ""},

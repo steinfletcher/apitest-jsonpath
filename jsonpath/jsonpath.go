@@ -6,14 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"reflect"
 	"strings"
 
 	"github.com/PaesslerAG/jsonpath"
 )
 
-func Contains(expression string, expected interface{}, data io.Reader) error {
+func Contains(expression string, expected any, data io.Reader) error {
 	value, err := JsonPath(data, expression)
 	if err != nil {
 		return err
@@ -28,7 +27,7 @@ func Contains(expression string, expected interface{}, data io.Reader) error {
 	return nil
 }
 
-func Equal(expression string, expected interface{}, data io.Reader) error {
+func Equal(expression string, expected any, data io.Reader) error {
 	value, err := JsonPath(data, expression)
 	if err != nil {
 		return err
@@ -39,7 +38,7 @@ func Equal(expression string, expected interface{}, data io.Reader) error {
 	return nil
 }
 
-func NotEqual(expression string, expected interface{}, data io.Reader) error {
+func NotEqual(expression string, expected any, data io.Reader) error {
 	value, err := JsonPath(data, expression)
 	if err != nil {
 		return err
@@ -125,9 +124,9 @@ func NotPresent(expression string, data io.Reader) error {
 	return nil
 }
 
-func JsonPath(reader io.Reader, expression string) (interface{}, error) {
-	v := interface{}(nil)
-	b, err := ioutil.ReadAll(reader)
+func JsonPath(reader io.Reader, expression string) (any, error) {
+	v := any(nil)
+	b, err := io.ReadAll(reader)
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +144,7 @@ func JsonPath(reader io.Reader, expression string) (interface{}, error) {
 }
 
 // courtesy of github.com/stretchr/testify
-func IncludesElement(list interface{}, element interface{}) (ok, found bool) {
+func IncludesElement(list any, element any) (ok, found bool) {
 	listValue := reflect.ValueOf(list)
 	elementValue := reflect.ValueOf(element)
 	defer func() {
@@ -161,7 +160,7 @@ func IncludesElement(list interface{}, element interface{}) (ok, found bool) {
 
 	if reflect.TypeOf(list).Kind() == reflect.Map {
 		mapKeys := listValue.MapKeys()
-		for i := 0; i < len(mapKeys); i++ {
+		for i := range mapKeys {
 			if ObjectsAreEqual(mapKeys[i].Interface(), element) {
 				return true, true
 			}
@@ -177,7 +176,7 @@ func IncludesElement(list interface{}, element interface{}) (ok, found bool) {
 	return true, false
 }
 
-func ObjectsAreEqual(expected, actual interface{}) bool {
+func ObjectsAreEqual(expected, actual any) bool {
 	if expected == nil || actual == nil {
 		return expected == actual
 	}
@@ -197,7 +196,7 @@ func ObjectsAreEqual(expected, actual interface{}) bool {
 	return bytes.Equal(exp, act)
 }
 
-func isEmpty(object interface{}) bool {
+func isEmpty(object any) bool {
 	if object == nil {
 		return true
 	}
