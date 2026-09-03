@@ -112,3 +112,40 @@ func TestEqualAndNotEqual(t *testing.T) {
 	assertError(t, NotEqual(`$.name`, "jon", strings.NewReader(body)), "")
 	assertError(t, NotEqual(`$.name`, "jan", strings.NewReader(body)), `"$.name" value is equal to "jan"`)
 }
+
+func TestPresentAndNotPresent(t *testing.T) {
+	tests := map[string]struct {
+		body       string
+		expression string
+		present    bool
+	}{
+		"string":          {`{"a": "hello"}`, `$.a`, true},
+		"number":          {`{"a": 22}`, `$.a`, true},
+		"false":           {`{"a": false}`, `$.a`, true},
+		"zero":            {`{"a": 0}`, `$.a`, true},
+		"empty string":    {`{"a": ""}`, `$.a`, true},
+		"object":          {`{"a": {"b": 1}}`, `$.a`, true},
+		"array":           {`{"a": [1]}`, `$.a`, true},
+		"filter match":    {`{"a": [{"k": 1}, {"k": 2}]}`, `$.a[? @.k==2]`, true},
+		"null":            {`{"a": null}`, `$.a`, false},
+		"missing key":     {`{"b": 1}`, `$.a`, false},
+		"empty array":     {`{"a": []}`, `$.a`, false},
+		"empty object":    {`{"a": {}}`, `$.a`, false},
+		"filter no match": {`{"a": [{"k": 1}]}`, `$.a[? @.k==2]`, false},
+		"invalid json":    {`not json`, `$.a`, false},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			presentErr := Present(test.expression, strings.NewReader(test.body))
+			notPresentErr := NotPresent(test.expression, strings.NewReader(test.body))
+			if test.present {
+				assertError(t, presentErr, "")
+				assertError(t, notPresentErr, "value present for expression: '"+test.expression+"'")
+			} else {
+				assertError(t, presentErr, "value not present for expression: '"+test.expression+"'")
+				assertError(t, notPresentErr, "")
+			}
+		})
+	}
+}

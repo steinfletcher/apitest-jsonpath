@@ -109,16 +109,16 @@ func lengthOf(expression string, data io.Reader) (int, error) {
 }
 
 func Present(expression string, data io.Reader) error {
-	value, _ := JsonPath(data, expression)
-	if isEmpty(value) {
+	value, err := JsonPath(data, expression)
+	if err != nil || !isPresent(value) {
 		return fmt.Errorf("value not present for expression: '%s'", expression)
 	}
 	return nil
 }
 
 func NotPresent(expression string, data io.Reader) error {
-	value, _ := JsonPath(data, expression)
-	if !isEmpty(value) {
+	value, err := JsonPath(data, expression)
+	if err == nil && isPresent(value) {
 		return fmt.Errorf("value present for expression: '%s'", expression)
 	}
 	return nil
@@ -196,24 +196,19 @@ func ObjectsAreEqual(expected, actual any) bool {
 	return bytes.Equal(exp, act)
 }
 
-func isEmpty(object any) bool {
-	if object == nil {
-		return true
+// isPresent reports whether the expression produced a value. A JSON null is treated as absent,
+// as is an empty array or object, which is what the evaluator returns when a wildcard or filter
+// expression matches nothing. Every other value is present, including false, 0 and "".
+func isPresent(value any) bool {
+	if value == nil {
+		return false
 	}
 
-	objValue := reflect.ValueOf(object)
-
-	switch objValue.Kind() {
-	case reflect.Array, reflect.Chan, reflect.Map, reflect.Slice:
-		return objValue.Len() == 0
-	case reflect.Ptr:
-		if objValue.IsNil() {
-			return true
-		}
-		deref := objValue.Elem().Interface()
-		return isEmpty(deref)
+	v := reflect.ValueOf(value)
+	switch v.Kind() {
+	case reflect.Array, reflect.Map, reflect.Slice:
+		return v.Len() > 0
 	default:
-		zero := reflect.Zero(objValue.Type())
-		return reflect.DeepEqual(object, zero.Interface())
+		return true
 	}
 }

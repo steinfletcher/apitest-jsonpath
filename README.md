@@ -75,7 +75,10 @@ apitest.New().
 
 ### Present / NotPresent
 
-Use `Present` and `NotPresent` to check the presence of a field in the response without evaluating its value.
+Use `Present` and `NotPresent` to check the presence of a field in the response without evaluating its value. A field
+is present when the expression resolves to any value other than `null`, so `false`, `0` and `""` all count as present.
+An empty array or object counts as not present, since that is also what a wildcard or filter expression yields when
+nothing matches.
 
 ```go
 apitest.New().
