@@ -30,13 +30,17 @@ func CopyResponse(response *http.Response) *http.Response {
 	}
 
 	for name, values := range response.Header {
-		resCopy.Header[name] = values
+		resCopy.Header[name] = append([]string(nil), values...)
 	}
 
 	return resCopy
 }
 
 func CopyRequest(request *http.Request) *http.Request {
+	if request == nil {
+		return nil
+	}
+
 	resCopy := &http.Request{
 		Method:        request.Method,
 		Host:          request.Host,
