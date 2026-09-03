@@ -33,22 +33,21 @@ func jwtEqual(tokenSelector func(*http.Response) (string, error), expression str
 
 		parts := strings.Split(token, ".")
 		if len(parts) != 3 {
-			splitErr := errors.New("invalid token: token should contain header, payload and secret")
-			return splitErr
+			return errors.New("invalid token: token should contain header, payload and signature")
 		}
 
-		decodedPayload, PayloadErr := base64Decode(parts[index])
-		if PayloadErr != nil {
-			return fmt.Errorf("invalid jwt: %s", PayloadErr.Error())
+		decoded, err := base64Decode(parts[index])
+		if err != nil {
+			return fmt.Errorf("invalid jwt: %w", err)
 		}
 
-		value, err := jsonpath.JsonPath(bytes.NewReader(decodedPayload), expression)
+		value, err := jsonpath.JsonPath(bytes.NewReader(decoded), expression)
 		if err != nil {
 			return err
 		}
 
 		if !jsonpath.ObjectsAreEqual(value, expected) {
-			return errors.New(fmt.Sprintf("\"%s\" not equal to \"%s\"", value, expected))
+			return fmt.Errorf("\"%v\" not equal to \"%v\"", value, expected)
 		}
 
 		return nil
@@ -62,8 +61,7 @@ func base64Decode(src string) ([]byte, error) {
 
 	decoded, err := base64.URLEncoding.DecodeString(src)
 	if err != nil {
-		errMsg := fmt.Errorf("decoding Error %s", err)
-		return nil, errMsg
+		return nil, fmt.Errorf("decoding error: %w", err)
 	}
 	return decoded, nil
 }

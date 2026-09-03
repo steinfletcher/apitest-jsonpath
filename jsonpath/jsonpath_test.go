@@ -81,3 +81,34 @@ func TestLessThan(t *testing.T) {
 		})
 	}
 }
+
+func TestContains(t *testing.T) {
+	tests := map[string]struct {
+		body     string
+		expected interface{}
+		err      string
+	}{
+		"number in array":      {`{"items": [1, 2]}`, float64(2), ""},
+		"string in array":      {`{"items": ["a", "b"]}`, "b", ""},
+		"substring":            {`{"items": "abc"}`, "b", ""},
+		"key in map":           {`{"items": {"a": 1}}`, "a", ""},
+		"number not in array":  {`{"items": [1, 2]}`, float64(5), `"[1 2]" does not contain "5"`},
+		"value without length": {`{"items": 5}`, float64(5), `"5" could not be applied builtin len()`},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assertError(t, Contains(`$.items`, test.expected, strings.NewReader(test.body)), test.err)
+		})
+	}
+}
+
+func TestEqualAndNotEqual(t *testing.T) {
+	body := `{"id": 12345, "name": "jan"}`
+
+	assertError(t, Equal(`$.id`, float64(12345), strings.NewReader(body)), "")
+	assertError(t, Equal(`$.id`, float64(1), strings.NewReader(body)), `"12345" not equal to "1"`)
+	assertError(t, Equal(`$.missing`, "x", strings.NewReader(body)), "evaluating '$.missing' resulted in error: 'unknown key missing'")
+	assertError(t, NotEqual(`$.name`, "jon", strings.NewReader(body)), "")
+	assertError(t, NotEqual(`$.name`, "jan", strings.NewReader(body)), `"$.name" value is equal to "jan"`)
+}

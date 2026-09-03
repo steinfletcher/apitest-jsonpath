@@ -34,3 +34,26 @@ func TestApiTest_JWT(t *testing.T) {
 func fromAuthHeader(response *http.Response) (string, error) {
 	return response.Header.Get("Authorization"), nil
 }
+
+func TestApiTest_JWT_Errors(t *testing.T) {
+	selector := func(token string) func(*http.Response) (string, error) {
+		return func(*http.Response) (string, error) { return token, nil }
+	}
+	tests := map[string]struct {
+		token    string
+		expected string
+	}{
+		"wrong number of parts": {"a.b", "invalid token: token should contain header, payload and signature"},
+		"payload not base64":    {"a.!!!.c", "invalid jwt: decoding error: illegal base64 data at input byte 0"},
+		"payload not json":      {"a.bm90IGpzb24.c", "invalid character 'o' in literal null (expecting 'u')"},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			err := jsonpath.JWTPayloadEqual(selector(test.token), `$.sub`, "x")(nil, nil)
+			if err == nil || err.Error() != test.expected {
+				t.Fatalf("expected error %q, got %v", test.expected, err)
+			}
+		})
+	}
+}

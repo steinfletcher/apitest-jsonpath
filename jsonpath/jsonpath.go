@@ -20,10 +20,10 @@ func Contains(expression string, expected interface{}, data io.Reader) error {
 	}
 	ok, found := IncludesElement(value, expected)
 	if !ok {
-		return fmt.Errorf("\"%s\" could not be applied builtin len()", expected)
+		return fmt.Errorf("\"%v\" could not be applied builtin len()", expected)
 	}
 	if !found {
-		return fmt.Errorf("\"%s\" does not contain \"%s\"", value, expected)
+		return fmt.Errorf("\"%v\" does not contain \"%v\"", value, expected)
 	}
 	return nil
 }
@@ -34,7 +34,7 @@ func Equal(expression string, expected interface{}, data io.Reader) error {
 		return err
 	}
 	if !ObjectsAreEqual(value, expected) {
-		return fmt.Errorf("\"%s\" not equal to \"%s\"", value, expected)
+		return fmt.Errorf("\"%v\" not equal to \"%v\"", value, expected)
 	}
 	return nil
 }
@@ -46,7 +46,7 @@ func NotEqual(expression string, expected interface{}, data io.Reader) error {
 	}
 
 	if ObjectsAreEqual(value, expected) {
-		return fmt.Errorf("\"%s\" value is equal to \"%s\"", expression, expected)
+		return fmt.Errorf("\"%s\" value is equal to \"%v\"", expression, expected)
 	}
 	return nil
 }
@@ -139,7 +139,7 @@ func JsonPath(reader io.Reader, expression string) (interface{}, error) {
 
 	value, err := jsonpath.Get(expression, v)
 	if err != nil {
-		return nil, fmt.Errorf("evaluating '%s' resulted in error: '%s'", expression, err)
+		return nil, fmt.Errorf("evaluating '%s' resulted in error: '%w'", expression, err)
 	}
 	return value, nil
 }
