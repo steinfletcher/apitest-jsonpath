@@ -1,0 +1,22 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: standard
+  enable:
+    - copyloopvar
+    - errorlint
+    - misspell
+    - modernize
+    - nilerr
+    - unconvert
+    - unparam
+    - usestdlibvars
+    - wastedassign
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
