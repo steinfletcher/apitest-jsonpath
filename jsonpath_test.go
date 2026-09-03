@@ -373,5 +373,36 @@ func TestApiTest_Matches_FailForNilValue(t *testing.T) {
 		Body: ioutil.NopCloser(bytes.NewBuffer([]byte(`{"aSlice":[1,2,3]}`))),
 	}, nil)
 
+	assert.EqualError(t, err, "evaluating '$.nothingHere' resulted in error: 'unknown key nothingHere'")
+}
+
+func TestApiTest_Matches_FailForNullValue(t *testing.T) {
+	matcher := jsonpath.Matches(`$.nothingHere`, `.+`)
+
+	err := matcher(&http.Response{
+		Body: ioutil.NopCloser(bytes.NewBuffer([]byte(`{"nothingHere": null}`))),
+	}, nil)
+
 	assert.EqualError(t, err, "no match for pattern: '$.nothingHere'")
+}
+
+func TestApiTest_Matches_ReportsInvalidJSON(t *testing.T) {
+	matcher := jsonpath.Matches(`$.a`, `.+`)
+
+	err := matcher(&http.Response{
+		Body: ioutil.NopCloser(bytes.NewBuffer([]byte(`not json`))),
+	}, nil)
+
+	assert.EqualError(t, err, "invalid character 'o' in literal null (expecting 'u')")
+}
+
+func TestApiTest_Matches_ReportsInvalidExpressions(t *testing.T) {
+	matcher := jsonpath.Matches(`$[`, `.+`)
+
+	err := matcher(&http.Response{
+		Body: ioutil.NopCloser(bytes.NewBuffer([]byte(`{"a": 1}`))),
+	}, nil)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "evaluating '$[' resulted in error")
 }

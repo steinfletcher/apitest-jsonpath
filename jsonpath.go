@@ -73,7 +73,10 @@ func Matches(expression string, regexp string) func(*http.Response, *http.Reques
 		if err != nil {
 			return fmt.Errorf("invalid pattern: '%s'", regexp)
 		}
-		value, _ := jsonpath.JsonPath(res.Body, expression)
+		value, err := jsonpath.JsonPath(res.Body, expression)
+		if err != nil {
+			return err
+		}
 		if value == nil {
 			return fmt.Errorf("no match for pattern: '%s'", expression)
 		}
@@ -94,7 +97,7 @@ func Matches(expression string, regexp string) func(*http.Response, *http.Reques
 			reflect.Float32,
 			reflect.Float64,
 			reflect.String:
-			if !pattern.Match([]byte(fmt.Sprintf("%v", value))) {
+			if !pattern.MatchString(fmt.Sprintf("%v", value)) {
 				return fmt.Errorf("value '%v' does not match pattern '%v'", value, regexp)
 			}
 			return nil
