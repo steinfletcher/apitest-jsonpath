@@ -421,3 +421,29 @@ func TestApiTest_Root_JoinsSubExpressions(t *testing.T) {
 	assert.NoError(t, jsonpath.Chain().Equal(`$.count`, float64(1)).End()(response(), req))
 	assert.EqualError(t, jsonpath.Root(`$.items[0]`).Equal(`id`, float64(2)).End()(response(), req), `"1" not equal to "2"`)
 }
+
+func TestApiTest_Chain_Lengths(t *testing.T) {
+	body := `{"items": [1, 2, 3], "name": "jan"}`
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	response := func() *http.Response {
+		return &http.Response{Body: io.NopCloser(bytes.NewBufferString(body))}
+	}
+
+	assert.NoError(t, jsonpath.Chain().
+		Len(`$.items`, 3).
+		GreaterThan(`$.items`, 2).
+		LessThan(`$.items`, 4).
+		Len(`$.name`, 3).
+		Matches(`$.name`, `^j`).
+		End()(response(), req))
+
+	assert.NoError(t, jsonpath.Root(`$`).
+		Len(`items`, 3).
+		GreaterThan(`items`, 3).
+		LessThan(`items`, 3).
+		End()(response(), req))
+
+	assert.EqualError(t, jsonpath.Chain().Len(`$.items`, 2).End()(response(), req), `"3" not equal to "2"`)
+	assert.EqualError(t, jsonpath.Chain().GreaterThan(`$.items`, 4).End()(response(), req), `"3" is less than "4"`)
+	assert.EqualError(t, jsonpath.Chain().LessThan(`$.items`, 2).End()(response(), req), `"3" is greater than "2"`)
+}

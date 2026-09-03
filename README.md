@@ -164,7 +164,8 @@ func fromAuthHeader(res *http.Response) (string, error) {
 
 ### Chain
 
-`Chain` is used to provide several assertions at once
+`Chain` is used to provide several assertions at once. `Equal`, `NotEqual`, `Contains`, `Len`, `GreaterThan`,
+`LessThan`, `Present`, `NotPresent` and `Matches` are all available on the chain.
 
 ```go
 Assert(
@@ -172,6 +173,7 @@ Assert(
 		Equal("a", "1").
 		NotEqual("b", "2").
 		Present("c").
+		Len("d", 3).
 		End(),
 ).
 ```

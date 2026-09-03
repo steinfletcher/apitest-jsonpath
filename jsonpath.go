@@ -142,6 +142,24 @@ func (r *AssertionChain) Contains(expression string, expected any) *AssertionCha
 	return r
 }
 
+// Len adds a Len assertion to the chain
+func (r *AssertionChain) Len(expression string, expectedLength int) *AssertionChain {
+	r.assertions = append(r.assertions, Len(r.path(expression), expectedLength))
+	return r
+}
+
+// GreaterThan adds a GreaterThan assertion to the chain
+func (r *AssertionChain) GreaterThan(expression string, minimumLength int) *AssertionChain {
+	r.assertions = append(r.assertions, GreaterThan(r.path(expression), minimumLength))
+	return r
+}
+
+// LessThan adds a LessThan assertion to the chain
+func (r *AssertionChain) LessThan(expression string, maximumLength int) *AssertionChain {
+	r.assertions = append(r.assertions, LessThan(r.path(expression), maximumLength))
+	return r
+}
+
 // Present adds an Present assertion to the chain
 func (r *AssertionChain) Present(expression string) *AssertionChain {
 	r.assertions = append(r.assertions, Present(r.path(expression)))
