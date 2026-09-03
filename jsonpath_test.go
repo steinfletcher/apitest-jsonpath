@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/steinfletcher/apitest"
@@ -405,4 +406,18 @@ func TestApiTest_Matches_ReportsInvalidExpressions(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "evaluating '$[' resulted in error")
+}
+
+func TestApiTest_Root_JoinsSubExpressions(t *testing.T) {
+	body := `{"items": [{"id": 1, "name": "jan"}], "count": 1}`
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	response := func() *http.Response {
+		return &http.Response{Body: ioutil.NopCloser(bytes.NewBufferString(body))}
+	}
+
+	assert.NoError(t, jsonpath.Root(`$.items`).Equal(`[0].id`, float64(1)).End()(response(), req))
+	assert.NoError(t, jsonpath.Root(`$.items[0]`).Equal(`id`, float64(1)).Equal(`.name`, "jan").End()(response(), req))
+	assert.NoError(t, jsonpath.Root(`$.items[0].`).Equal(`name`, "jan").End()(response(), req))
+	assert.NoError(t, jsonpath.Chain().Equal(`$.count`, float64(1)).End()(response(), req))
+	assert.EqualError(t, jsonpath.Root(`$.items[0]`).Equal(`id`, float64(2)).End()(response(), req), `"1" not equal to "2"`)
 }
