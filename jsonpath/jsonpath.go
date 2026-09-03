@@ -6,100 +6,106 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"reflect"
 	"strings"
 
 	"github.com/PaesslerAG/jsonpath"
 )
 
-func Contains(expression string, expected interface{}, data io.Reader) error {
+func Contains(expression string, expected any, data io.Reader) error {
 	value, err := JsonPath(data, expression)
 	if err != nil {
 		return err
 	}
 	ok, found := IncludesElement(value, expected)
 	if !ok {
-		return fmt.Errorf("\"%s\" could not be applied builtin len()", expected)
+		return fmt.Errorf("\"%v\" could not be applied builtin len()", expected)
 	}
 	if !found {
-		return fmt.Errorf("\"%s\" does not contain \"%s\"", value, expected)
+		return fmt.Errorf("\"%v\" does not contain \"%v\"", value, expected)
 	}
 	return nil
 }
 
-func Equal(expression string, expected interface{}, data io.Reader) error {
+func Equal(expression string, expected any, data io.Reader) error {
 	value, err := JsonPath(data, expression)
 	if err != nil {
 		return err
 	}
 	if !ObjectsAreEqual(value, expected) {
-		return fmt.Errorf("\"%s\" not equal to \"%s\"", value, expected)
+		return fmt.Errorf("\"%v\" not equal to \"%v\"", value, expected)
 	}
 	return nil
 }
 
-func NotEqual(expression string, expected interface{}, data io.Reader) error {
+func NotEqual(expression string, expected any, data io.Reader) error {
 	value, err := JsonPath(data, expression)
 	if err != nil {
 		return err
 	}
 
 	if ObjectsAreEqual(value, expected) {
-		return fmt.Errorf("\"%s\" value is equal to \"%s\"", expression, expected)
+		return fmt.Errorf("\"%s\" value is equal to \"%v\"", expression, expected)
 	}
 	return nil
 }
 
 func Length(expression string, expectedLength int, data io.Reader) error {
-	value, err := JsonPath(data, expression)
+	length, err := lengthOf(expression, data)
 	if err != nil {
 		return err
 	}
 
-	if value == nil {
-		return errors.New("value is null")
-	}
-
-	v := reflect.ValueOf(value)
-	if v.Len() != expectedLength {
-		return fmt.Errorf("\"%d\" not equal to \"%d\"", v.Len(), expectedLength)
+	if length != expectedLength {
+		return fmt.Errorf("\"%d\" not equal to \"%d\"", length, expectedLength)
 	}
 	return nil
 }
 
 func GreaterThan(expression string, minimumLength int, data io.Reader) error {
-	value, err := JsonPath(data, expression)
+	length, err := lengthOf(expression, data)
 	if err != nil {
 		return err
 	}
 
-	if value == nil {
-		return fmt.Errorf("value is null")
-	}
-
-	v := reflect.ValueOf(value)
-	if v.Len() < minimumLength {
-		return fmt.Errorf("\"%d\" is greater than \"%d\"", v.Len(), minimumLength)
+	if length < minimumLength {
+		return fmt.Errorf("\"%d\" is less than \"%d\"", length, minimumLength)
 	}
 	return nil
 }
 
 func LessThan(expression string, maximumLength int, data io.Reader) error {
-	value, err := JsonPath(data, expression)
+	length, err := lengthOf(expression, data)
 	if err != nil {
 		return err
 	}
 
+	if length > maximumLength {
+		return fmt.Errorf("\"%d\" is greater than \"%d\"", length, maximumLength)
+	}
+	return nil
+}
+
+// lengthOf evaluates the expression and returns the length of the result. Only arrays, slices,
+// maps and strings have a length; a null result or a result of any other type is an error rather
+// than a panic, so that a failed assertion is reported normally.
+func lengthOf(expression string, data io.Reader) (int, error) {
+	value, err := JsonPath(data, expression)
+	if err != nil {
+		return 0, err
+	}
+
 	if value == nil {
-		return fmt.Errorf("value is null")
+		return 0, errors.New("value is null")
 	}
 
 	v := reflect.ValueOf(value)
-	if v.Len() > maximumLength {
-		return fmt.Errorf("\"%d\" is less than \"%d\"", v.Len(), maximumLength)
+	switch v.Kind() {
+	case reflect.Array, reflect.Chan, reflect.Map, reflect.Slice, reflect.String:
+		return v.Len(), nil
+	default:
+		return 0, fmt.Errorf("value of type %s has no length", v.Kind())
 	}
-	return nil
 }
 
 func Present(expression string, data io.Reader) error {
@@ -118,9 +124,9 @@ func NotPresent(expression string, data io.Reader) error {
 	return nil
 }
 
-func JsonPath(reader io.Reader, expression string) (interface{}, error) {
-	v := interface{}(nil)
-	b, err := ioutil.ReadAll(reader)
+func JsonPath(reader io.Reader, expression string) (any, error) {
+	v := any(nil)
+	b, err := io.ReadAll(reader)
 	if err != nil {
 		return nil, err
 	}
@@ -132,13 +138,13 @@ func JsonPath(reader io.Reader, expression string) (interface{}, error) {
 
 	value, err := jsonpath.Get(expression, v)
 	if err != nil {
-		return nil, fmt.Errorf("evaluating '%s' resulted in error: '%s'", expression, err)
+		return nil, fmt.Errorf("evaluating '%s' resulted in error: '%w'", expression, err)
 	}
 	return value, nil
 }
 
 // courtesy of github.com/stretchr/testify
-func IncludesElement(list interface{}, element interface{}) (ok, found bool) {
+func IncludesElement(list any, element any) (ok, found bool) {
 	listValue := reflect.ValueOf(list)
 	elementValue := reflect.ValueOf(element)
 	defer func() {
@@ -154,7 +160,7 @@ func IncludesElement(list interface{}, element interface{}) (ok, found bool) {
 
 	if reflect.TypeOf(list).Kind() == reflect.Map {
 		mapKeys := listValue.MapKeys()
-		for i := 0; i < len(mapKeys); i++ {
+		for i := range mapKeys {
 			if ObjectsAreEqual(mapKeys[i].Interface(), element) {
 				return true, true
 			}
@@ -170,7 +176,7 @@ func IncludesElement(list interface{}, element interface{}) (ok, found bool) {
 	return true, false
 }
 
-func ObjectsAreEqual(expected, actual interface{}) bool {
+func ObjectsAreEqual(expected, actual any) bool {
 	if expected == nil || actual == nil {
 		return expected == actual
 	}
@@ -190,7 +196,7 @@ func ObjectsAreEqual(expected, actual interface{}) bool {
 	return bytes.Equal(exp, act)
 }
 
-func isEmpty(object interface{}) bool {
+func isEmpty(object any) bool {
 	if object == nil {
 		return true
 	}

@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/steinfletcher/apitest"
@@ -86,7 +87,7 @@ func TestApiTest_Equal_Map(t *testing.T) {
 		Handler(handler).
 		Get("/hello").
 		Expect(t).
-		Assert(jsonpath.Equal(`$`, map[string]interface{}{"a": "hello", "b": float64(12345)})).
+		Assert(jsonpath.Equal(`$`, map[string]any{"a": "hello", "b": float64(12345)})).
 		End()
 }
 
@@ -143,7 +144,7 @@ func TestApiTest_NotEqual_Map(t *testing.T) {
 		Handler(handler).
 		Get("/hello").
 		Expect(t).
-		Assert(jsonpath.NotEqual(`$`, map[string]interface{}{"a": "hello", "b": float64(1)})).
+		Assert(jsonpath.NotEqual(`$`, map[string]any{"a": "hello", "b": float64(1)})).
 		End()
 }
 
@@ -350,7 +351,7 @@ func TestApiTest_Matches_FailForObject(t *testing.T) {
 	matcher := jsonpath.Matches(`$.anObject`, `.+`)
 
 	err := matcher(&http.Response{
-		Body: ioutil.NopCloser(bytes.NewBuffer([]byte(`{"anObject":{"aString":"lol"}}`))),
+		Body: io.NopCloser(bytes.NewBuffer([]byte(`{"anObject":{"aString":"lol"}}`))),
 	}, nil)
 
 	assert.EqualError(t, err, "unable to match using type: map")
@@ -360,7 +361,7 @@ func TestApiTest_Matches_FailForArray(t *testing.T) {
 	matcher := jsonpath.Matches(`$.aSlice`, `.+`)
 
 	err := matcher(&http.Response{
-		Body: ioutil.NopCloser(bytes.NewBuffer([]byte(`{"aSlice":[1,2,3]}`))),
+		Body: io.NopCloser(bytes.NewBuffer([]byte(`{"aSlice":[1,2,3]}`))),
 	}, nil)
 
 	assert.EqualError(t, err, "unable to match using type: slice")
@@ -370,8 +371,53 @@ func TestApiTest_Matches_FailForNilValue(t *testing.T) {
 	matcher := jsonpath.Matches(`$.nothingHere`, `.+`)
 
 	err := matcher(&http.Response{
-		Body: ioutil.NopCloser(bytes.NewBuffer([]byte(`{"aSlice":[1,2,3]}`))),
+		Body: io.NopCloser(bytes.NewBuffer([]byte(`{"aSlice":[1,2,3]}`))),
+	}, nil)
+
+	assert.EqualError(t, err, "evaluating '$.nothingHere' resulted in error: 'unknown key nothingHere'")
+}
+
+func TestApiTest_Matches_FailForNullValue(t *testing.T) {
+	matcher := jsonpath.Matches(`$.nothingHere`, `.+`)
+
+	err := matcher(&http.Response{
+		Body: io.NopCloser(bytes.NewBuffer([]byte(`{"nothingHere": null}`))),
 	}, nil)
 
 	assert.EqualError(t, err, "no match for pattern: '$.nothingHere'")
+}
+
+func TestApiTest_Matches_ReportsInvalidJSON(t *testing.T) {
+	matcher := jsonpath.Matches(`$.a`, `.+`)
+
+	err := matcher(&http.Response{
+		Body: io.NopCloser(bytes.NewBuffer([]byte(`not json`))),
+	}, nil)
+
+	assert.EqualError(t, err, "invalid character 'o' in literal null (expecting 'u')")
+}
+
+func TestApiTest_Matches_ReportsInvalidExpressions(t *testing.T) {
+	matcher := jsonpath.Matches(`$[`, `.+`)
+
+	err := matcher(&http.Response{
+		Body: io.NopCloser(bytes.NewBuffer([]byte(`{"a": 1}`))),
+	}, nil)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "evaluating '$[' resulted in error")
+}
+
+func TestApiTest_Root_JoinsSubExpressions(t *testing.T) {
+	body := `{"items": [{"id": 1, "name": "jan"}], "count": 1}`
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	response := func() *http.Response {
+		return &http.Response{Body: io.NopCloser(bytes.NewBufferString(body))}
+	}
+
+	assert.NoError(t, jsonpath.Root(`$.items`).Equal(`[0].id`, float64(1)).End()(response(), req))
+	assert.NoError(t, jsonpath.Root(`$.items[0]`).Equal(`id`, float64(1)).Equal(`.name`, "jan").End()(response(), req))
+	assert.NoError(t, jsonpath.Root(`$.items[0].`).Equal(`name`, "jan").End()(response(), req))
+	assert.NoError(t, jsonpath.Chain().Equal(`$.count`, float64(1)).End()(response(), req))
+	assert.EqualError(t, jsonpath.Root(`$.items[0]`).Equal(`id`, float64(2)).End()(response(), req), `"1" not equal to "2"`)
 }

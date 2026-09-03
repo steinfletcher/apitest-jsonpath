@@ -1,2 +1,8 @@
+.PHONY: test lint
+
 test:
-	go test -v .
+	go vet ./...
+	go test -race ./...
+
+lint:
+	golangci-lint run ./...

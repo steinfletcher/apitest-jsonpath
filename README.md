@@ -1,4 +1,4 @@
-![Test](https://github.com/steinfletcher/apitest-jsonpath/workflows/Test/badge.svg)
+[![Test](https://github.com/steinfletcher/apitest-jsonpath/actions/workflows/ci.yml/badge.svg)](https://github.com/steinfletcher/apitest-jsonpath/actions/workflows/ci.yml)
 
 # apitest-jsonpath
 
@@ -7,7 +7,7 @@ This library provides jsonpath assertions for [apitest](https://github.com/stein
 # Installation
 
 ```bash
-go get -u github.com/steinfletcher/apitest-jsonpath
+go get github.com/steinfletcher/apitest-jsonpath
 ```
 
 ## Examples
@@ -17,7 +17,7 @@ go get -u github.com/steinfletcher/apitest-jsonpath
 `Equal` checks for value equality when the json path expression returns a single result. Given the response is `{"id": 12345}`
 
 ```go
-apitest.New(handler).
+apitest.Handler(handler).
 	Get("/hello").
 	Expect(t).
 	Assert(jsonpath.Equal(`$.id`, float64(12345))).
@@ -31,7 +31,7 @@ apitest.New().
 	Handler(handler).
 	Get("/hello").
 	Expect(t).
-	Assert(jsonpath.Equal(`$`, map[string]interface{}{"message": "hello", "id": float64(12345)})).
+	Assert(jsonpath.Equal(`$`, map[string]any{"message": "hello", "id": float64(12345)})).
 	End()
 ```
 
@@ -40,7 +40,7 @@ apitest.New().
 `NotEqual` checks that the json path expression value is not equal to given value
 
 ```go
-apitest.New(handler).
+apitest.Handler(handler).
 	Get("/hello").
 	Expect(t).
 	Assert(jsonpath.NotEqual(`$.a`, float64(56789))).
@@ -54,7 +54,7 @@ apitest.New().
 	Handler(handler).
 	Get("/hello").
 	Expect(t).
-	Assert(jsonpath.NotEqual(`$`, map[string]interface{}{"a": "hello", "b": float64(56789)})).
+	Assert(jsonpath.NotEqual(`$`, map[string]any{"a": "hello", "b": float64(56789)})).
 	End()
 ```
 
@@ -194,3 +194,34 @@ Assert(
 		End(),
 ).
 ```
+
+A dot is inserted between the root and each sub-expression unless the sub-expression starts with a bracket, so array
+elements under the root can be addressed directly:
+
+```go
+Assert(
+	jsonpath.Root("$.items").
+		Equal("[0].id", float64(1)).
+		Equal("[1].id", float64(2)).
+		End(),
+).
+```
+
+### Matching mock request bodies
+
+The `mocks` package provides the same assertions as `apitest.Matcher` functions, for matching the JSON body of a
+request made to an [apitest mock](https://github.com/steinfletcher/apitest#mocking-external-http-calls).
+
+```go
+import "github.com/steinfletcher/apitest-jsonpath/mocks"
+
+var createUser = apitest.NewMock().
+	Post("/user-api").
+	AddMatcher(mocks.Equal(`$.name`, "jon")).
+	AddMatcher(mocks.Contains(`$.roles`, "admin")).
+	RespondWith().
+	Status(http.StatusCreated).
+	End()
+```
+
+`mocks.Equal`, `mocks.NotEqual`, `mocks.Contains`, `mocks.Len` and `mocks.GreaterThan` are available.

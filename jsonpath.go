@@ -5,27 +5,28 @@ import (
 	"net/http"
 	"reflect"
 	regex "regexp"
+	"strings"
 
 	httputil "github.com/steinfletcher/apitest-jsonpath/http"
 	"github.com/steinfletcher/apitest-jsonpath/jsonpath"
 )
 
 // Contains is a convenience function to assert that a jsonpath expression extracts a value in an array
-func Contains(expression string, expected interface{}) func(*http.Response, *http.Request) error {
+func Contains(expression string, expected any) func(*http.Response, *http.Request) error {
 	return func(res *http.Response, req *http.Request) error {
 		return jsonpath.Contains(expression, expected, res.Body)
 	}
 }
 
 // Equal is a convenience function to assert that a jsonpath expression extracts a value
-func Equal(expression string, expected interface{}) func(*http.Response, *http.Request) error {
+func Equal(expression string, expected any) func(*http.Response, *http.Request) error {
 	return func(res *http.Response, req *http.Request) error {
 		return jsonpath.Equal(expression, expected, res.Body)
 	}
 }
 
 // NotEqual is a function to check json path expression value is not equal to given value
-func NotEqual(expression string, expected interface{}) func(*http.Response, *http.Request) error {
+func NotEqual(expression string, expected any) func(*http.Response, *http.Request) error {
 	return func(res *http.Response, req *http.Request) error {
 		return jsonpath.NotEqual(expression, expected, res.Body)
 	}
@@ -73,7 +74,10 @@ func Matches(expression string, regexp string) func(*http.Response, *http.Reques
 		if err != nil {
 			return fmt.Errorf("invalid pattern: '%s'", regexp)
 		}
-		value, _ := jsonpath.JsonPath(res.Body, expression)
+		value, err := jsonpath.JsonPath(res.Body, expression)
+		if err != nil {
+			return err
+		}
 		if value == nil {
 			return fmt.Errorf("no match for pattern: '%s'", expression)
 		}
@@ -94,7 +98,7 @@ func Matches(expression string, regexp string) func(*http.Response, *http.Reques
 			reflect.Float32,
 			reflect.Float64,
 			reflect.String:
-			if !pattern.Match([]byte(fmt.Sprintf("%v", value))) {
+			if !pattern.MatchString(fmt.Sprintf("%v", value)) {
 				return fmt.Errorf("value '%v' does not match pattern '%v'", value, regexp)
 			}
 			return nil
@@ -111,7 +115,7 @@ func Chain() *AssertionChain {
 
 // Root creates a new assertion chain prefixed with the given expression
 func Root(expression string) *AssertionChain {
-	return &AssertionChain{rootExpression: expression + "."}
+	return &AssertionChain{rootExpression: strings.TrimSuffix(expression, ".")}
 }
 
 // AssertionChain supports chaining assertions and root expressions
@@ -121,39 +125,52 @@ type AssertionChain struct {
 }
 
 // Equal adds an Equal assertion to the chain
-func (r *AssertionChain) Equal(expression string, expected interface{}) *AssertionChain {
-	r.assertions = append(r.assertions, Equal(r.rootExpression+expression, expected))
+func (r *AssertionChain) Equal(expression string, expected any) *AssertionChain {
+	r.assertions = append(r.assertions, Equal(r.path(expression), expected))
 	return r
 }
 
 // NotEqual adds an NotEqual assertion to the chain
-func (r *AssertionChain) NotEqual(expression string, expected interface{}) *AssertionChain {
-	r.assertions = append(r.assertions, NotEqual(r.rootExpression+expression, expected))
+func (r *AssertionChain) NotEqual(expression string, expected any) *AssertionChain {
+	r.assertions = append(r.assertions, NotEqual(r.path(expression), expected))
 	return r
 }
 
 // Contains adds an Contains assertion to the chain
-func (r *AssertionChain) Contains(expression string, expected interface{}) *AssertionChain {
-	r.assertions = append(r.assertions, Contains(r.rootExpression+expression, expected))
+func (r *AssertionChain) Contains(expression string, expected any) *AssertionChain {
+	r.assertions = append(r.assertions, Contains(r.path(expression), expected))
 	return r
 }
 
 // Present adds an Present assertion to the chain
 func (r *AssertionChain) Present(expression string) *AssertionChain {
-	r.assertions = append(r.assertions, Present(r.rootExpression+expression))
+	r.assertions = append(r.assertions, Present(r.path(expression)))
 	return r
 }
 
 // NotPresent adds an NotPresent assertion to the chain
 func (r *AssertionChain) NotPresent(expression string) *AssertionChain {
-	r.assertions = append(r.assertions, NotPresent(r.rootExpression+expression))
+	r.assertions = append(r.assertions, NotPresent(r.path(expression)))
 	return r
 }
 
 // Matches adds an Matches assertion to the chain
 func (r *AssertionChain) Matches(expression, regexp string) *AssertionChain {
-	r.assertions = append(r.assertions, Matches(r.rootExpression+expression, regexp))
+	r.assertions = append(r.assertions, Matches(r.path(expression), regexp))
 	return r
+}
+
+// path joins the root expression and the given expression. A dot is inserted between them unless
+// the expression already starts with one or with a bracket, so that Root("$.items").Equal("[0].id", 1)
+// evaluates "$.items[0].id".
+func (r *AssertionChain) path(expression string) string {
+	if r.rootExpression == "" {
+		return expression
+	}
+	if strings.HasPrefix(expression, "[") || strings.HasPrefix(expression, ".") {
+		return r.rootExpression + expression
+	}
+	return r.rootExpression + "." + expression
 }
 
 // End returns an func(*http.Response, *http.Request) error which is a combination of the registered assertions
