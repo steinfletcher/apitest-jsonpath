@@ -52,54 +52,61 @@ func NotEqual(expression string, expected interface{}, data io.Reader) error {
 }
 
 func Length(expression string, expectedLength int, data io.Reader) error {
-	value, err := JsonPath(data, expression)
+	length, err := lengthOf(expression, data)
 	if err != nil {
 		return err
 	}
 
-	if value == nil {
-		return errors.New("value is null")
-	}
-
-	v := reflect.ValueOf(value)
-	if v.Len() != expectedLength {
-		return fmt.Errorf("\"%d\" not equal to \"%d\"", v.Len(), expectedLength)
+	if length != expectedLength {
+		return fmt.Errorf("\"%d\" not equal to \"%d\"", length, expectedLength)
 	}
 	return nil
 }
 
 func GreaterThan(expression string, minimumLength int, data io.Reader) error {
-	value, err := JsonPath(data, expression)
+	length, err := lengthOf(expression, data)
 	if err != nil {
 		return err
 	}
 
-	if value == nil {
-		return fmt.Errorf("value is null")
-	}
-
-	v := reflect.ValueOf(value)
-	if v.Len() < minimumLength {
-		return fmt.Errorf("\"%d\" is greater than \"%d\"", v.Len(), minimumLength)
+	if length < minimumLength {
+		return fmt.Errorf("\"%d\" is less than \"%d\"", length, minimumLength)
 	}
 	return nil
 }
 
 func LessThan(expression string, maximumLength int, data io.Reader) error {
-	value, err := JsonPath(data, expression)
+	length, err := lengthOf(expression, data)
 	if err != nil {
 		return err
 	}
 
+	if length > maximumLength {
+		return fmt.Errorf("\"%d\" is greater than \"%d\"", length, maximumLength)
+	}
+	return nil
+}
+
+// lengthOf evaluates the expression and returns the length of the result. Only arrays, slices,
+// maps and strings have a length; a null result or a result of any other type is an error rather
+// than a panic, so that a failed assertion is reported normally.
+func lengthOf(expression string, data io.Reader) (int, error) {
+	value, err := JsonPath(data, expression)
+	if err != nil {
+		return 0, err
+	}
+
 	if value == nil {
-		return fmt.Errorf("value is null")
+		return 0, errors.New("value is null")
 	}
 
 	v := reflect.ValueOf(value)
-	if v.Len() > maximumLength {
-		return fmt.Errorf("\"%d\" is less than \"%d\"", v.Len(), maximumLength)
+	switch v.Kind() {
+	case reflect.Array, reflect.Chan, reflect.Map, reflect.Slice, reflect.String:
+		return v.Len(), nil
+	default:
+		return 0, fmt.Errorf("value of type %s has no length", v.Kind())
 	}
-	return nil
 }
 
 func Present(expression string, data io.Reader) error {
